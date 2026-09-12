@@ -235,7 +235,8 @@ Layout:
 - Filterleiste: Geschäftsfeld (Alle + je eins), Schalter
   "nur Auffälligkeiten"
 - Links: Baum. Wurzel "Alle Objekte", darunter Objekte, darunter
-  Aufgaben. Auf-/Zuklappen je Objekt. Badge je Knoten: Anzahl
+  Aufgaben. Auf-/Zuklappen je Objekt, ein Knopf rechts in der
+  Wurzelzeile klappt alle auf oder zu. Badge je Knoten: Anzahl
   Redundanzen rot, sonst Anzahl White Spots grau, sonst nichts.
   Suchfeld über dem Baum, filtert Knoten nach Objekt- oder
   Aufgabenname, Treffer werden aufgeklappt.

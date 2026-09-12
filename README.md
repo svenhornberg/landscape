@@ -105,8 +105,8 @@ angezeigt. Danach schreibt es eine einzelne HTML-Datei mit dem Modell darin:
 kein Server, kein Netzzugriff, per Doppelklick zu öffnen und per Mail zu
 verschicken.
 
-Die Oberfläche ist ein Explorer. Links ein Baum aus Objekten und Aufgaben,
-rechts drei Ebenen:
+Die Oberfläche ist ein Explorer. Links ein Baum aus Objekten und Aufgaben
+(ein Knopf in der Wurzelzeile klappt alle auf oder zu), rechts drei Ebenen:
 
 1. **Alle Objekte** – Objekt × Abteilung. Die Zelle zeigt die schlechteste
    Aufgabe darunter und wie viele White Spots offen sind.

@@ -105,6 +105,39 @@ Deno.test(
   },
 );
 
+Deno.test("Ein Knopf klappt alle Objekte auf und zu", OHNE_SANITIZER, async () => {
+  await mitSeite(DEMO, async (seite) => {
+    const knopf = seite.locator(".tree .klapp");
+    assertEquals(await knopf.getAttribute("title"), "Alle aufklappen");
+    assertEquals(await seite.locator(".tree .node.d2").count(), 0);
+
+    // auf: alle zwoelf Aufgaben, die Auswahl bleibt auf der Wurzel
+    await knopf.click();
+    assertEquals(await seite.locator(".tree .node.d2").count(), 12);
+    assertEquals(await knopf.getAttribute("title"), "Alle zuklappen");
+    assertEquals(await seite.locator(".tree .node.d0.sel").count(), 1);
+
+    // zu
+    await knopf.click();
+    assertEquals(await seite.locator(".tree .node.d2").count(), 0);
+    assertEquals(await knopf.getAttribute("title"), "Alle aufklappen");
+
+    // Eine gewaehlte Aufgabe bleibt gewaehlt; zugeklappt traegt ihr Objekt die
+    // Auswahl, damit im Baum sichtbar bleibt, wo man ist
+    await seite.locator('.tree .node[data-objekt="kunde"]').click();
+    await seite.locator('.tree .node.d2[data-aufgabe="bonitaet"]').click();
+    assertEquals(await knopf.getAttribute("title"), "Alle zuklappen");
+    await knopf.click();
+    assertEquals(await seite.locator(".tree .node.d2").count(), 0);
+    assertEquals(
+      await seite.locator(".tree .node.d1.sel").getAttribute("data-objekt"),
+      "kunde",
+    );
+    assertEquals(await seite.textContent(".pane .ph h2"), "Kunde Bonität prüfen");
+    assertEquals(await seite.evaluate("location.hash"), "#objekt=kunde&aufgabe=bonitaet");
+  });
+});
+
 Deno.test(
   "Ebene 2 und 3 zeigen Chips, Wege und Fundstellen",
   OHNE_SANITIZER,

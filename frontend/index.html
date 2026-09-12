@@ -105,6 +105,13 @@ table.l3 th.row .n{white-space:nowrap}
 .node .badge.w{background:var(--bg);color:var(--ink-2)}
 .node.sel .badge{background:rgba(255,255,255,.2);color:#fff}
 .node.d0{padding-left:8px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px}
+/* Wurzelzeile: links der Knoten, rechts ein Knopf, der alle Objekte auf-
+   oder zuklappt. Die Zeile traegt die Auswahlfarbe, damit der Knopf mitgeht. */
+.wurzel{display:flex;align-items:stretch}.wurzel .node{flex:1;min-width:0}
+.wurzel.sel{background:var(--ink)}
+.klapp{flex:none;padding:0 12px;color:var(--ink-3);font-size:15px;line-height:1}
+.klapp:hover{color:var(--ink);background:var(--bg)}
+.wurzel.sel .klapp{color:rgba(255,255,255,.7)}.wurzel.sel .klapp:hover{color:#fff;background:transparent}
 .node.d1{padding-left:24px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px}
 .node.d2{padding-left:44px;color:var(--ink-2)}.node.d2.sel{color:#fff}
 .node.leer{color:var(--ink-3);font-weight:400;font-family:inherit;font-size:13px;cursor:default}
@@ -636,18 +643,29 @@ function ebeneAufgabe(objekt, aufgabe) {
 // ---------------------------------------------------------------------------
 
 function baum() {
-  var html = '<div class="tree"><button class="node d0' + (zustand.objekt ? "" : " sel") +
-    '" data-ziel="wurzel"><span class="tri"></span>Alle Objekte</button>';
+  // Mit gewaehltem System zeigt der Baum nur, was damit gemacht wird.
+  var objekte = modell.objekte.filter(function (o) {
+    return !zustand.system || objektNutzt(o);
+  });
+  var etwasOffen = objekte.some(function (o) { return zustand.offen[o.id] === true; });
+  var html = '<div class="tree"><div class="wurzel' + (zustand.objekt ? "" : " sel") +
+    '"><button class="node d0' + (zustand.objekt ? "" : " sel") +
+    '" data-ziel="wurzel"><span class="tri"></span>Alle Objekte</button>' +
+    (objekte.length
+      ? '<button class="klapp" data-aktion="' + (etwasOffen ? "zuklappen" : "aufklappen") +
+        '" title="' + (etwasOffen ? "Alle zuklappen" : "Alle aufklappen") + '">' +
+        (etwasOffen ? "\u229f" : "\u229e") + "</button>"
+      : "") +
+    "</div>";
   if (systemOhneTreffer()) {
     html += '<span class="node d1 leer"><span class="tri"></span>nichts mit ' +
       esc(systemName()) + "</span>";
   }
-  modell.objekte.forEach(function (o) {
-    // Mit gewaehltem System zeigt der Baum nur, was damit gemacht wird.
-    if (zustand.system && !objektNutzt(o)) return;
+  objekte.forEach(function (o) {
     var aufgeklappt = zustand.offen[o.id] === true;
+    // Zugeklappt zeigt das Objekt die Auswahl auch fuer seine gewaehlte Aufgabe.
     html += '<button class="node d1' +
-      (zustand.objekt === o.id && !zustand.aufgabe ? " sel" : "") +
+      (zustand.objekt === o.id && (!zustand.aufgabe || !aufgeklappt) ? " sel" : "") +
       '" data-objekt="' + esc(o.id) + '" data-klappen="1"><span class="tri">' +
       (aufgeklappt ? "▾" : "▸") + "</span>" + esc(o.name) +
       badge(befundeObjekt(o)) + "</button>";
@@ -771,6 +789,10 @@ document.getElementById("haupt").addEventListener("click", function (ereignis) {
   if (aktion) {
     if (aktion.dataset.aktion === "alle-gf") zustand.gf = "alle";
     if (aktion.dataset.aktion === "system-weg") zustand.system = null;
+    if (aktion.dataset.aktion === "zuklappen") zustand.offen = {};
+    if (aktion.dataset.aktion === "aufklappen") {
+      modell.objekte.forEach(function (o) { zustand.offen[o.id] = true; });
+    }
     zeichne();
     return;
   }
