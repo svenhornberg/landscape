@@ -40,17 +40,36 @@ Wer ein neues Beispiel braucht, bleibt in diesem Vokabular.
 
 Die Reihenfolge steht in `SPEC.md` unter „Arbeitsweise mit Claude Code".
 
-## Bauen und prüfen
+## Wie das Werkzeug ausgeliefert wird
+
+Es gibt keinen Build und keine Binaries. Wer den Plan bauen will, ruft den
+Quelltext dieses Repos über seine URL auf und braucht sonst nur sein
+eigenes Datenverzeichnis:
 
 ```bash
-cargo test                                 # ein Fall je Regel, dazu make
-cargo clippy --all-targets                 # muss warnungsfrei sein
-cargo fmt --check                          # muss sauber sein
-cargo run -- validate examples/demo        # 0 Fehler, 0 Warnungen
-cargo run -- validate examples/tippfehler  # 3 Fehler mit Vorschlägen
+deno run --allow-read --allow-write \
+  https://raw.githubusercontent.com/svenhornberg/landscape/v0.2.0/cli.ts \
+  validate .
 ```
 
-Alle vier müssen vor jedem Commit durchlaufen.
+Die URL zeigt immer auf ein **Tag**, nie auf `main`. Sonst ändert eine
+Änderung am Werkzeug unbemerkt den Deploy fremder Daten. Ein neues Tag
+wird gesetzt, wenn sich das Verhalten ändert, und die URL im Datenrepo
+wird bewusst nachgezogen.
+
+## Prüfen
+
+```bash
+deno task pruefe        # check, lint, fmt --check und alle Tests
+deno task demo          # 0 Fehler, 0 Warnungen
+deno task tippfehler    # 3 Fehler mit Vorschlägen
+```
+
+Alle drei müssen vor jedem Commit durchlaufen. `deno task pruefe` fasst
+`deno check`, `deno lint`, `deno fmt --check` und `deno test` zusammen.
+
+Es gibt keinen Build-Schritt und keine Binaries, weder lokal noch in der
+CI. Aufgerufen wird immer der Quelltext.
 
 ## Branches
 
@@ -85,17 +104,24 @@ Dasselbe gilt im privaten Datenrepo, schon aus Gewohnheit.
 
 - Bezeichner, Meldungen und Kommentare auf Deutsch. Umlaute in Strings und
   Kommentaren sind in Ordnung, in Bezeichnern nicht.
+- Externe Importe werden **voll qualifiziert und auf eine Version
+  festgelegt** geschrieben (`jsr:@std/yaml@1.0.10`), nie als blosser Name
+  über eine Import-Map. Beim Aufruf über eine URL gilt die Import-Map
+  dieses Repos nicht, ein blosser Name waere dort nicht auflösbar. Die
+  Lint-Regel `no-import-prefix` ist deshalb in `deno.json` abgeschaltet.
 - Jede Validierungsregel trägt eine Nummer (F1 bis F13, W1 bis W7). Die
   Liste steht im Kopf von `src/validate.rs`. Eine neue Regel bekommt eine
   Nummer, einen Eintrag dort und einen Testfall in `tests/regeln.rs`.
-- Getestet wird über das gebaute Binary, damit die Ausgabe mit
+- Getestet wird über die aufgerufene CLI, damit die Ausgabe mit
   `Datei:Zeile` und Vorschlag mitgeprüft wird.
-- Keine zusätzlichen Abhängigkeiten ohne Grund. Markdown-Tabellen und
-  Frontmatter werden bewusst selbst geparst.
+- Keine zusätzlichen Abhängigkeiten ohne Grund. Es gibt genau eine,
+  `@std/yaml`. Markdown-Tabellen, Frontmatter und die Argumente werden
+  bewusst selbst geparst.
 - Das Frontend ist Vanilla JS in einer Datei, keine Build-Toolchain, keine
-  CDNs zur Laufzeit. Es steht in `frontend/index.html`, wird per
-  `include_str!` eingebettet, und `make` ersetzt darin den Platzhalter
-  `<!--MODEL-->` durch das Modell als JSON.
+  CDNs zur Laufzeit. Es steht in `frontend/index.html` und kommt als
+  Text-Import herein, gehört also zum Modulgraphen und wird beim
+  Remote-Aufruf mitgeladen und gecacht. `make` ersetzt darin den
+  Platzhalter `<!--MODEL-->` durch das Modell als JSON.
 - Alle Kennzahlen rechnet das Frontend, das Binary liefert nur das
   validierte Modell. Neue Kennzahlen gehoeren deshalb ins Frontend, nicht
   nach `model.rs`.

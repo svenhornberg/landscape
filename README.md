@@ -15,28 +15,35 @@ Die vollständige Spezifikation steht in [SPEC.md](SPEC.md).
 | `bplan make`     | fertig                                        |
 | `bplan serve`    | Platzhalter, Schritt 3                        |
 
-## Installieren
+## Benutzen
 
-Rust wird einmalig gebraucht, über [rustup.rs](https://rustup.rs) (unter
-Windows der Installer, unter macOS und Linux der Einzeiler auf der Seite).
-Danach genügt ein Befehl, ohne dieses Repo zu klonen:
-
-```bash
-cargo install --git https://github.com/svenhornberg/landscape bplan
-```
-
-Das dauert etwa zwanzig Sekunden und legt `bplan` in den Pfad. Ab da
-reicht das Verzeichnis mit den eigenen Daten:
+Es gibt nichts zu installieren und nichts zu bauen. Gebraucht wird
+[Deno](https://deno.com), danach genügt das eigene Datenverzeichnis:
 
 ```bash
 cd mein-datenrepo
+
+deno run --allow-read --allow-write \
+  https://raw.githubusercontent.com/svenhornberg/landscape/v0.2.0/cli.ts \
+  validate .
+```
+
+Deno lädt den Quelltext beim ersten Aufruf und hat ihn danach im Cache; die
+folgenden Läufe brauchen kein Netz. Die URL zeigt auf ein Tag, damit eine
+Änderung hier nicht unbemerkt das Ergebnis anderswo verschiebt.
+
+Wer es öfter braucht, legt sich einen Kurzbefehl an:
+
+```bash
+deno install -g --allow-read --allow-write --name bplan \
+  https://raw.githubusercontent.com/svenhornberg/landscape/v0.2.0/cli.ts
+
 bplan validate
 bplan make -o bebauungsplan.html
 ```
 
-Auf einen neueren Stand bringt man es mit demselben Befehl plus
-`--force`. Fertige Binaries gibt es bewusst nicht, weder als Release noch
-im Repo; gebaut wird aus dem Quelltext, lokal wie in der CI.
+Fertige Binaries gibt es bewusst nicht, weder als Release noch im Repo.
+Ausgeführt wird immer der Quelltext, lokal wie in der CI.
 
 ## Am Repo arbeiten
 
@@ -44,10 +51,9 @@ im Repo; gebaut wird aus dem Quelltext, lokal wie in der CI.
 git clone https://github.com/svenhornberg/landscape.git
 cd landscape
 
-cargo run -- validate examples/demo        # läuft sauber durch
-cargo run -- validate examples/tippfehler  # meldet Tippfehler mit Zeile und Vorschlag
-cargo run -- make examples/demo            # schreibt bebauungsplan.html
-cargo test                                 # ein Testfall je Regel aus SPEC.md
+deno task demo          # läuft sauber durch
+deno task tippfehler    # meldet Tippfehler mit Zeile und Vorschlag
+deno task pruefe        # check, lint, fmt und alle Tests
 ```
 
 So sieht die Ausgabe bei Tippfehlern aus:
@@ -88,10 +94,11 @@ Farbcode überall gleich: ein System grün, zwei gelb, drei oder mehr rot, ein
 White Spot schraffiert. Chips für Systeme sind voll umrandet bei `aktiv`,
 gestrichelt bei `auslaufend`, gepunktet bei `geplant`.
 
-Alle Kennzahlen rechnet das Frontend selbst aus den Rohdaten; das Binary
+Alle Kennzahlen rechnet das Frontend selbst aus den Rohdaten; das Werkzeug
 liefert nur das validierte Modell. So liegt diese Logik an einer Stelle. Das
-Frontend steht in [`frontend/index.html`](frontend/index.html) und ist per
-`include_str!` eingebettet; `make` ersetzt darin den Platzhalter durch das
+Frontend steht in [`frontend/index.html`](frontend/index.html) und kommt als
+Text-Import in den Modulgraphen, wird also beim Aufruf über eine URL
+mitgeladen und mitgecacht; `make` ersetzt darin den Platzhalter durch das
 Modell als JSON.
 
 ## Eigene Daten
@@ -137,24 +144,25 @@ verglichen wird sowohl mit der ID als auch mit dem Anzeigenamen, damit
 `shopsystem` das System `shop` findet).
 
 Die vollständige Liste steht als Regelnummern im Kopf von
-[`src/validate.rs`](src/validate.rs); jede Regel hat einen Testfall in
-[`tests/regeln.rs`](tests/regeln.rs).
+[`src/validate.ts`](src/validate.ts); jede Regel hat einen Testfall in
+[`tests/regeln_test.ts`](tests/regeln_test.ts).
 
 ## Aufbau
 
 ```
-Cargo.toml
+deno.json
+cli.ts             Kommandos, Argumente, Ausgabe
 src/
-  main.rs          CLI und Ausgabe
-  model.rs         Datenstrukturen, JSON-Schema
-  parse.rs         YAML, Frontmatter, Markdown-Tabellen
-  validate.rs      Regeln, Fehler und Warnungen mit Positionen
-  serve.rs         Platzhalter
-  make.rs          HTML-Datei mit eingebettetem Modell
+  model.ts         Datenstrukturen, JSON-Schema
+  befund.ts        ein Fehler oder eine Warnung mit Fundstelle
+  parse.ts         YAML, Frontmatter, Markdown-Tabellen
+  validate.ts      Regeln, Fehler und Warnungen mit Positionen
+  make.ts          HTML-Datei mit eingebettetem Modell
+  serve.ts         Platzhalter
 frontend/
   index.html       das komplette Frontend, Vanilla JS, ohne Build-Schritt
 tests/
-  regeln.rs        ein Testfall je Regel
+  regeln_test.ts   ein Testfall je Regel
 examples/
   demo/            vollständiger Beispieldatensatz (fiktiver Versandhandel)
   tippfehler/      kleiner Datensatz mit absichtlichen Fehlern

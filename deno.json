@@ -1,0 +1,22 @@
+{
+  "tasks": {
+    "pruefe": "deno check cli.ts && deno lint && deno fmt --check && deno test --allow-read --allow-write --allow-run",
+    "demo": "deno run --allow-read --allow-write cli.ts validate examples/demo",
+    "tippfehler": "deno run --allow-read --allow-write cli.ts validate examples/tippfehler"
+  },
+  "lint": {
+    "rules": {
+      "exclude": [
+        "no-import-prefix"
+      ]
+    }
+  },
+  "fmt": {
+    "lineWidth": 90
+  },
+  "exclude": [
+    "**/*.md",
+    "**/*.html",
+    "examples"
+  ]
+}

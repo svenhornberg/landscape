@@ -1,10 +1,9 @@
-# Rust
-/target/
-**/*.rs.bk
-*.pdb
-
 # Ausgabe von `bplan make`
 /bebauungsplan.html
+/out/
+
+# Deno
+.deno/
 
 # Editoren und Betriebssysteme
 .DS_Store

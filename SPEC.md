@@ -12,10 +12,12 @@ und wo eine zuständige Abteilung keinen Weg hat (White Spot).
 - Die Dateien sind so gebaut, dass ein Mensch und ein LLM sie ohne
   Werkzeug lesen und ändern können. Markdown-Tabellen für die Masse,
   YAML für Stammdaten mit Attributen.
-- Das Tool ist ein einzelnes Binary ohne Installation, ohne Adminrechte,
-  ohne Netzwerkzugriff nach außen. Läuft auf Windows, macOS, Linux.
-- Das Frontend ist eine einzige HTML-Datei, die in das Binary
-  eingebettet ist. Keine Build-Toolchain für JS, keine externen CDNs
+- Das Tool läuft ohne Installation und ohne Adminrechte, direkt aus dem
+  öffentlichen Repo. Kein Kompilieren, keine fertigen Binaries. Läuft auf
+  Windows, macOS, Linux.
+- Beim Lauf greift es nur auf die Datendateien zu, nicht nach außen.
+- Das Frontend ist eine einzige HTML-Datei, die als Text-Import zum
+  Modulgraphen gehört. Keine Build-Toolchain für JS, keine externen CDNs
   zur Laufzeit (Schriften eingebettet oder System-Fallback).
 
 ## Kommandos
@@ -271,34 +273,41 @@ macht `make` plus Screenshot).
 
 ## Technik
 
-- Rust, ein Crate, ein Binary. Zielgröße unter 10 MB.
-- `clap` für die CLI, `serde` + `serde_yaml` für YAML, `serde_json`
-  für die Ausgabe.
+- TypeScript für Deno, ohne Build-Schritt. Aufgerufen wird direkt die
+  URL einer Datei im öffentlichen Repo, festgenagelt auf ein Tag.
+- Einzige Abhängigkeit ist `@std/yaml`, voll qualifiziert importiert.
+  Eine Import-Map gilt beim Aufruf über eine URL nicht.
+- Argumente selbst gelesen, es sind drei Kommandos und drei Optionen.
 - Markdown-Tabellen selbst parsen (Zeilen mit `|` splitten, Kopfzeile
-  erkennen, Trennzeile überspringen). Kein Markdown-Crate nötig.
+  erkennen, Trennzeile überspringen). Kein Markdown-Paket nötig.
 - Frontmatter: Block zwischen zwei `---` am Dateianfang, als YAML.
-- Webserver: `axum` oder `tiny_http`, was kleiner baut. Nur zwei
-  Routen. Bindet ausschließlich an 127.0.0.1.
-- Frontend per `include_str!("../frontend/index.html")` eingebettet.
-  `make` ersetzt einen Platzhalter `<!--MODEL-->` durch das JSON.
+- Webserver: `Deno.serve`, nur zwei Routen, bindet ausschließlich an
+  127.0.0.1. Derselbe Handler bedient später auch den Worker im Deploy.
+- Frontend per Text-Import (`with { type: "text" }`) eingebunden. Damit
+  lädt und cacht Deno die HTML-Datei zusammen mit dem Code, auch beim
+  Aufruf über eine URL. `make` ersetzt darin den Platzhalter
+  `<!--MODEL-->` durch das JSON.
 - Fehlerausgabe mit Datei:Zeile, farbig wenn TTY.
 - Tests: ein Beispieldatensatz unter `examples/`, Tests für Parser
-  und jede Validierungsregel.
+  und jede Validierungsregel, gefahren über die aufgerufene CLI.
 
 ## Repo-Struktur
 
 ```
 bplan/
-  Cargo.toml
+  deno.json
+  cli.ts             Kommandos, Argumente, Ausgabe
   src/
-    main.rs          CLI
-    model.rs         Datenstrukturen, JSON-Schema
-    parse.rs         YAML + Markdown-Tabellen + Frontmatter
-    validate.rs      Regeln, Fehler/Warnungen mit Positionen
-    serve.rs
-    make.rs
+    model.ts         Datenstrukturen, JSON-Schema
+    befund.ts        ein Fehler oder eine Warnung mit Fundstelle
+    parse.ts         YAML + Markdown-Tabellen + Frontmatter
+    validate.ts      Regeln, Fehler/Warnungen mit Positionen
+    make.ts
+    serve.ts
   frontend/
     index.html       das komplette Frontend
+  tests/
+    regeln_test.ts   ein Testfall je Regel
   examples/
     demo/data/...    Beispieldatensatz (siehe data/ in diesem Ordner)
   mockups/
