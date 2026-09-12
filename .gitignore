@@ -1,0 +1,14 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+
+# Ausgabe von `bplan make`
+/bebauungsplan.html
+
+# Editoren und Betriebssysteme
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

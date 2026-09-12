@@ -1,0 +1,29 @@
+geschaeftsfelder:
+  - id: pk
+    name: Privatkunden
+  - id: gk
+    name: Geschaeftskunden
+  - id: mp
+    name: Marktplatz
+
+abteilungen:
+  - id: vertrieb
+    name: Vertrieb
+    geschaeftsfelder: [gk]
+    bearbeitet: [angebot, bestellung, kunde]
+  - id: service
+    name: Kundenservice
+    geschaeftsfelder: [pk, gk, mp]
+    bearbeitet: [bestellung, kunde, retoure]
+  - id: lager
+    name: Lager und Versand
+    geschaeftsfelder: [pk, gk, mp]
+    bearbeitet: [bestellung, retoure]
+  - id: buchhaltung
+    name: Buchhaltung
+    geschaeftsfelder: [pk, gk, mp]
+    bearbeitet: [rechnung, kunde]
+  - id: marktplatz
+    name: Marktplatz-Team
+    geschaeftsfelder: [mp]
+    bearbeitet: [bestellung, retoure]

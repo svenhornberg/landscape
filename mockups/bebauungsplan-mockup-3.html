@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bebauungsplan – Mockup 3 (Drill-down)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f4f6;--panel:#fff;--ink:#1c262e;--ink-2:#55636d;--ink-3:#8a98a3;--line:#d9dfe4;--line-2:#c4ccd3;
+ --h0:#fff;--h1:#dbeee9;--h2:#f6e3b8;--h3:#f2c2b0;--h1-ink:#1f6b5a;--h2-ink:#8a5b00;--h3-ink:#9a3418}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:14px;line-height:1.45}
+h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;margin:0;font-weight:600}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.top{display:flex;align-items:baseline;gap:24px;padding:20px 28px 0}.top h1{font-size:22px}.top .sub{color:var(--ink-2)}.top .right{margin-left:auto;color:var(--ink-2)}
+.bar{display:flex;align-items:center;gap:32px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.group{display:flex;align-items:center;gap:8px}.group .lbl{color:var(--ink-2);margin-right:4px}
+.chip{padding:5px 11px;border:1px solid var(--line-2);border-radius:999px;background:var(--panel)}.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.variants{display:flex;padding:14px 28px 0;align-items:center;gap:14px}.variants .lbl{color:var(--ink-2)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:6px;overflow:hidden;background:var(--panel)}
+.seg button{padding:6px 14px;border-right:1px solid var(--line-2)}.seg button:last-child{border-right:0}.seg button.on{background:var(--ink);color:#fff}
+.variants .desc{color:var(--ink-2)}
+.stage{padding:16px 28px 40px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.card .hd{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:12px}.card .hd h2{font-size:16px}.card .hd .meta{color:var(--ink-2)}
+.card .bd{padding:16px}
+.n0{background:var(--h0);background-image:repeating-linear-gradient(135deg,transparent 0 6px,#eef1f3 6px 7px)}.n1{background:var(--h1)}.n2{background:var(--h2)}.n3{background:var(--h3)}
+.sys{display:inline-block;padding:2px 7px;border-radius:4px;font-size:12px;background:rgba(255,255,255,.7);border:1px solid rgba(28,38,46,.25);white-space:nowrap}
+.sys.auslaufend{border-style:dashed;color:var(--ink-2)}.sys.geplant{border-style:dotted;background:transparent;color:var(--ink-3)}
+.legend{display:flex;gap:18px;align-items:center;color:var(--ink-2);padding:10px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.legend .sw{display:inline-block;width:14px;height:14px;border:1px solid var(--line-2);vertical-align:-2px;margin-right:6px}
+
+/* Breadcrumb */
+.crumbs{display:flex;align-items:center;gap:6px;padding:12px 16px;border-bottom:1px solid var(--line);font-family:"IBM Plex Sans Condensed";font-size:16px}
+.crumbs button{color:var(--ink-2);padding:2px 4px;border-radius:4px}.crumbs button:hover{background:var(--bg);color:var(--ink)}
+.crumbs .sep{color:var(--ink-3)}.crumbs .cur{font-weight:600;padding:2px 4px}
+.crumbs .back{margin-left:auto;color:var(--ink-2);font-family:"IBM Plex Sans";font-size:13px}
+
+/* Ebene 0: Objektliste */
+table.lvl{border-collapse:separate;border-spacing:0;width:100%}
+table.lvl th,table.lvl td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:middle}
+table.lvl thead th{padding:8px 10px;text-align:left;font-weight:500;color:var(--ink-2);border-bottom:2px solid var(--ink);white-space:nowrap;background:var(--panel);position:sticky;top:0}
+table.lvl th.row{text-align:left;min-width:240px;background:var(--panel)}
+table.lvl th.row button{width:100%;padding:10px 12px;display:flex;align-items:baseline;gap:10px;font-family:"IBM Plex Sans Condensed";font-size:15px;font-weight:600}
+table.lvl th.row button:hover{background:var(--bg)}
+table.lvl th.row .n{color:var(--ink-3);font-weight:400;font-size:12px;font-family:"IBM Plex Sans"}
+table.lvl th.row .go{margin-left:auto;color:var(--ink-3);font-weight:400}
+table.lvl td.c{min-width:100px;height:44px;text-align:center}
+table.lvl td.c .cnt{font-family:"IBM Plex Sans Condensed";font-size:17px;font-weight:600}
+.n1 .cnt{color:var(--h1-ink)}.n2 .cnt{color:var(--h2-ink)}.n3 .cnt{color:var(--h3-ink)}.n0 .cnt{color:var(--ink-3);font-size:13px;font-weight:400}
+table.lvl td.c .sub{font-size:11px;color:var(--ink-2);display:block;margin-top:-2px}
+table.lvl td.na{background:#fafbfc}
+table.lvl td.c.click{cursor:pointer}table.lvl td.c.click:hover{box-shadow:inset 0 0 0 2px var(--ink)}
+table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justify-content:center}
+
+/* Ebene 2: Aufgabe */
+.l2{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.dbox{border:1px solid var(--line-2);border-radius:6px;padding:10px 12px}
+.dbox h3{font-size:15px;display:flex;justify-content:space-between;align-items:baseline}
+.dbox h3 .v{font-size:13px;font-weight:500}
+.dbox.n2 h3 .v{color:var(--h2-ink)}.dbox.n3 h3 .v{color:var(--h3-ink)}.dbox.n1 h3 .v{color:var(--h1-ink)}.dbox.n0 h3 .v{color:var(--ink-3);font-weight:400}
+.dbox .way{padding:6px 0;border-top:1px solid var(--line);display:flex;gap:8px;align-items:baseline}
+.dbox .way .gf{color:var(--ink-3);font-size:12px;margin-left:auto;white-space:nowrap}
+.dbox .empty{color:var(--ink-3);padding:8px 0}
+
+/* Explorer */
+.explorer{display:grid;grid-template-columns:280px 1fr;min-height:60vh}
+.tree{border-right:1px solid var(--line);padding:8px 0;overflow:auto;max-height:75vh}
+.node{display:flex;align-items:center;gap:6px;width:100%;padding:5px 10px 5px 0;white-space:nowrap}
+.node:hover{background:var(--bg)}.node.sel{background:var(--ink);color:#fff}
+.node .tri{display:inline-block;width:16px;text-align:center;color:var(--ink-3);font-size:11px;flex:none}
+.node.sel .tri{color:#c4ccd3}
+.node .badge{margin-left:auto;font-size:11px;padding:1px 6px;border-radius:999px;background:var(--h3);color:var(--h3-ink)}
+.node .badge.w{background:var(--bg);color:var(--ink-2)}
+.node.sel .badge{background:rgba(255,255,255,.2);color:#fff}
+.node.d0{padding-left:8px;font-family:"IBM Plex Sans Condensed";font-weight:600;font-size:15px}
+.node.d1{padding-left:24px;font-family:"IBM Plex Sans Condensed";font-weight:600;font-size:15px}
+.node.d2{padding-left:44px;color:var(--ink-2)}.node.d2.sel{color:#fff}
+.pane{overflow:auto}
+.pane .ph{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:baseline}
+.pane .ph h2{font-size:16px}.pane .ph .meta{color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="top"><h1>Bebauungsplan</h1><span class="sub">Navigation in die Tiefe</span><span class="right" id="count"></span></div>
+<div class="bar"><div class="group" id="gf"><span class="lbl">Geschäftsfeld</span></div></div>
+<div class="variants" id="variants"></div>
+<div class="stage"><div class="card" id="main"></div></div>
+
+<script>
+// ---------- Stammdaten (wie Mockup 2) ----------
+const GF=["Privatkunden","Geschäftskunden","Marktplatz"];
+const OBJ=[["Angebot",["erstellen","kalkulieren","versenden","nachfassen","ablehnen"]],["Bestellung",["erfassen","prüfen","freigeben","stornieren"]],["Lieferung",["kommissionieren","verpacken","versenden","nachverfolgen"]],["Artikel",["anlegen","bepreisen","bebildern","auslisten","inventur"]],["Kunde",["anlegen","Bonität prüfen","sperren","pflegen"]],["Rechnung",["erstellen","versenden","mahnen","stornieren","gutschreiben"]],["Retoure",["erfassen","bewerten","erstatten"]],["Reklamation",["erfassen","bearbeiten","abschließen"]],["Lieferant",["anlegen","bestellen","freigeben"]],["Sortiment",["planen","freigeben"]],["Reporting",["Umsatz","Retourenquote","Forderungen","Pipeline"]],["Kampagne",["planen","aussteuern","auswerten"]],["Einsatzplanung",["Personal planen","Schulung buchen"]]].map(([name,tasks])=>({id:name,name,tasks}));
+const DEPT=[{id:"vertrieb",name:"Vertrieb",gf:["Geschäftskunden"]},{id:"service",name:"Kundenservice",gf:GF},{id:"lager",name:"Lager und Versand",gf:GF},{id:"einkauf",name:"Einkauf",gf:["Privatkunden","Geschäftskunden"]},{id:"marktplatz",name:"Marktplatz-Team",gf:["Marktplatz"]},{id:"buchhaltung",name:"Buchhaltung",gf:GF},{id:"mkt",name:"Marketing",gf:GF}];
+const SYS={erp:{name:"ERP",status:"aktiv"},shop:{name:"Shopsystem",status:"aktiv"},crm:{name:"CRM",status:"aktiv"},excel:{name:"Excel",status:"aktiv"},ticket:{name:"Ticketsystem",status:"aktiv"},mahn:{name:"Mahnlauf-Tool",status:"auslaufend"},oms:{name:"Order-Management",status:"geplant"},wms:{name:"Lagerverwaltung",status:"aktiv"},pim:{name:"PIM",status:"aktiv"},access:{name:"Abteilungs-DB",status:"auslaufend"},mail:{name:"E-Mail",status:"aktiv"},bi:{name:"BI-Portal",status:"aktiv"},portal:{name:"Kundenportal",status:"aktiv"}};
+const EXPECT={Angebot:["vertrieb","service"],Bestellung:["vertrieb","service","marktplatz"],Lieferung:["lager","service"],Artikel:["einkauf","marktplatz","mkt"],Kunde:["vertrieb","service","buchhaltung"],Rechnung:["buchhaltung","service"],Retoure:["service","lager","marktplatz"],Reklamation:["service","lager"],Lieferant:["einkauf","buchhaltung"],Sortiment:["einkauf","mkt"],Reporting:["buchhaltung","vertrieb","mkt","marktplatz"],Kampagne:["mkt","vertrieb"],Einsatzplanung:["lager","service"]};
+const POOL={vertrieb:["crm","excel","mail","erp"],service:["ticket","portal","shop","erp"],lager:["wms","erp","excel","access"],einkauf:["erp","pim","excel","mail"],marktplatz:["oms","excel","erp","shop"],buchhaltung:["erp","mahn","excel","bi"],mkt:["pim","excel","bi"]};
+const NOTES=["Standardweg","historisch, wird noch genutzt","für Sonderfälle","seit Migration 2024","nur bei Großkunden","Pilot"];
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+const F=[];
+GF.forEach(gf=>DEPT.forEach(d=>{if(!d.gf.includes(gf))return;OBJ.forEach(o=>{if(!EXPECT[o.id].includes(d.id))return;o.tasks.forEach(t=>{const r=rnd();if(r<0.12)return;const pool=POOL[d.id].slice();const pick=()=>pool.splice(Math.floor(rnd()*pool.length),1)[0];const n=r<0.55?1:r<0.88?2:3;for(let i=0;i<n&&pool.length;i++)F.push({gf,dept:d.id,obj:o.id,task:t,sys:pick(),note:NOTES[Math.floor(rnd()*NOTES.length)]});});});}));
+F.push({gf:"Marktplatz",dept:"marktplatz",obj:"Bestellung",task:"erfassen",sys:"oms",note:"Pilot geplant 2027"});
+
+// ---------- State ----------
+const S={gf:"alle",variant:"A",obj:null,task:null,open:new Set(["Angebot"])};
+const VARIANTS={A:"Drill-down mit Breadcrumb",B:"Explorer mit Baum links"};
+const facts=()=>F.filter(f=>S.gf==="alle"||f.gf===S.gf);
+const depts=()=>DEPT.filter(d=>S.gf==="alle"||d.gf.includes(S.gf));
+const gfs=()=>S.gf==="alle"?GF:[S.gf];
+const uniq=a=>[...new Set(a)];
+const heat=n=>n===0?"n0":n===1?"n1":n===2?"n2":"n3";
+
+function cellStats(o,t,d){let max=0,white=0;const tasks=t?[t]:OBJ.find(x=>x.id===o).tasks;tasks.forEach(tt=>gfs().forEach(g=>{if(!d.gf.includes(g))return;const n=uniq(facts().filter(f=>f.dept===d.id&&f.gf===g&&f.obj===o&&f.task===tt).map(f=>f.sys)).length;max=Math.max(max,n);if(n===0)white++;}));return{max,white};}
+function objIssues(o){let red=0,white=0;OBJ.find(x=>x.id===o).tasks.forEach(t=>depts().filter(d=>EXPECT[o].includes(d.id)).forEach(d=>{const s=cellStats(o,t,d);if(s.max>1)red++;white+=s.white;}));return{red,white};}
+function taskIssues(o,t){let red=0,white=0;depts().filter(d=>EXPECT[o].includes(d.id)).forEach(d=>{const s=cellStats(o,t,d);if(s.max>1)red++;white+=s.white;});return{red,white};}
+
+// ---------- Inhalte der drei Ebenen ----------
+function level0(){
+ const ds=depts();
+ let html='<table class="lvl"><thead><tr><th>Objekt</th>'+ds.map(d=>'<th>'+d.name+'</th>').join("")+'</tr></thead><tbody>';
+ OBJ.forEach(o=>{const is=objIssues(o.id);
+  html+='<tr><th class="row"><button data-obj="'+o.id+'">'+o.name+'<span class="n">'+o.tasks.length+' Aufgaben'+(is.red?' · '+is.red+' redundant':'')+(is.white?' · '+is.white+' offen':'')+'</span><span class="go">›</span></button></th>';
+  ds.forEach(d=>{if(!EXPECT[o.id].includes(d.id)){html+='<td class="c na"></td>';return;}const s=cellStats(o.id,null,d);
+   html+='<td class="c click '+heat(s.max)+'" data-obj="'+o.id+'"><span class="cnt">'+(s.max||"–")+'</span>'+(s.white?'<span class="sub">'+s.white+' offen</span>':'')+'</td>';});
+  html+='</tr>';});
+ return html+'</tbody></table>';
+}
+function level1(o){
+ const ds=depts().filter(d=>EXPECT[o].includes(d.id)); const oo=OBJ.find(x=>x.id===o);
+ let html='<table class="lvl"><thead><tr><th>Aufgabe</th>'+ds.map(d=>'<th>'+d.name+'</th>').join("")+'</tr></thead><tbody>';
+ oo.tasks.forEach(t=>{const is=taskIssues(o,t);
+  html+='<tr><th class="row"><button data-task="'+t+'">'+t+'<span class="n">'+(is.red?is.red+' redundant':'')+(is.red&&is.white?' · ':'')+(is.white?is.white+' offen':'')+'</span><span class="go">›</span></button></th>';
+  ds.forEach(d=>{const sys=uniq(facts().filter(f=>f.dept===d.id&&f.obj===o&&f.task===t).map(f=>f.sys));
+   html+='<td class="c click '+heat(sys.length)+'" data-task="'+t+'">'+(sys.length?'<div class="chips">'+sys.map(s=>'<span class="sys '+SYS[s].status+'">'+SYS[s].name+'</span>').join("")+'</div>':'<span class="cnt">–</span>')+'</td>';});
+  html+='</tr>';});
+ return html+'</tbody></table>';
+}
+function level2(o,t){
+ const ds=depts().filter(d=>EXPECT[o].includes(d.id));
+ let html='<div class="bd l2">';
+ ds.forEach(d=>{const m=facts().filter(f=>f.dept===d.id&&f.obj===o&&f.task===t);const n=uniq(m.map(f=>f.sys)).length;
+  html+='<div class="dbox '+heat(n)+'"><h3>'+d.name+'<span class="v">'+(n===0?"White Spot":n===1?"1 Weg":n+" Wege")+'</span></h3>';
+  if(!m.length)html+='<div class="empty">Keine Zuordnung erfasst, obwohl die Abteilung zuständig ist.</div>';
+  m.forEach(f=>html+='<div class="way"><span class="sys '+SYS[f.sys].status+'">'+SYS[f.sys].name+'</span><span>'+f.note+'</span><span class="gf">'+f.gf+'</span></div>');
+  html+='</div>';});
+ return html+'</div>';
+}
+const legend='<div class="legend"><span><span class="sw n1"></span>1 System</span><span><span class="sw n2"></span>2</span><span><span class="sw n3"></span>3+</span><span><span class="sw n0"></span>White Spot</span><span><span class="sw" style="background:#fafbfc"></span>nicht zuständig</span></div>';
+
+// ---------- Variante A: Drill-down ----------
+function viewDrill(){
+ let crumbs='<div class="crumbs"><button data-nav="root">Alle Objekte</button>';
+ if(S.obj)crumbs+='<span class="sep">›</span>'+(S.task?'<button data-nav="obj">'+S.obj+'</button>':'<span class="cur">'+S.obj+'</span>');
+ if(S.task)crumbs+='<span class="sep">›</span><span class="cur">'+S.task+'</span>';
+ if(S.obj)crumbs+='<button class="back" data-nav="up">← zurück</button>';
+ crumbs+='</div>';
+ const meta=S.task?'je Abteilung alle Wege im Detail':S.obj?'Aufgaben des Objekts, Zellen zeigen die Systeme':'Zelle zeigt die schlechteste Aufgabe des Objekts, Klick öffnet es';
+ return crumbs+'<div class="hd"><h2>'+(S.task?S.obj+' '+S.task:S.obj||'Objekte')+'</h2><span class="meta">'+meta+'</span></div>'+
+  (S.task?level2(S.obj,S.task):S.obj?level1(S.obj):level0())+legend;
+}
+
+// ---------- Variante B: Explorer ----------
+function viewExplorer(){
+ let tree='<div class="tree"><button class="node d0'+(!S.obj?" sel":"")+'" data-nav="root"><span class="tri"></span>Alle Objekte</button>';
+ OBJ.forEach(o=>{const open=S.open.has(o.id);const is=objIssues(o.id);
+  tree+='<button class="node d1'+(S.obj===o.id&&!S.task?" sel":"")+'" data-obj="'+o.id+'" data-toggle="1"><span class="tri">'+(open?"▾":"▸")+'</span>'+o.name+(is.red?'<span class="badge">'+is.red+'</span>':is.white?'<span class="badge w">'+is.white+'</span>':'')+'</button>';
+  if(open)o.tasks.forEach(t=>{const ti=taskIssues(o.id,t);
+   tree+='<button class="node d2'+(S.obj===o.id&&S.task===t?" sel":"")+'" data-obj="'+o.id+'" data-task="'+t+'"><span class="tri"></span>'+t+(ti.red?'<span class="badge">'+ti.red+'</span>':ti.white?'<span class="badge w">'+ti.white+'</span>':'')+'</button>';});
+ });
+ tree+='</div>';
+ const pane='<div class="pane"><div class="ph"><h2>'+(S.task?S.obj+' '+S.task:S.obj||'Alle Objekte')+'</h2><span class="meta">'+(S.task?'je Abteilung alle Wege im Detail':S.obj?'Aufgaben × zuständige Abteilungen':'Objekte × Abteilungen, schlechteste Aufgabe je Zelle')+'</span></div>'+
+  (S.task?level2(S.obj,S.task):S.obj?level1(S.obj):level0())+'</div>';
+ return '<div class="explorer">'+tree+pane+'</div>'+legend;
+}
+
+// ---------- Rendering ----------
+function renderBar(){const el=document.getElementById("gf");el.querySelectorAll(".chip").forEach(c=>c.remove());["alle",...GF].forEach(g=>{const b=document.createElement("button");b.className="chip"+(S.gf===g?" on":"");b.textContent=g==="alle"?"Alle":g;b.onclick=()=>{S.gf=g;renderAll();};el.appendChild(b);});
+ document.getElementById("count").textContent=OBJ.length+" Objekte · "+OBJ.reduce((a,o)=>a+o.tasks.length,0)+" Aufgaben · "+F.length+" Zuordnungen · Demo-Daten";
+ const vs=document.getElementById("variants");vs.innerHTML='<span class="lbl">Mockup</span><span class="seg">'+Object.keys(VARIANTS).map(k=>'<button class="'+(S.variant===k?"on":"")+'" data-k="'+k+'">'+k+'</button>').join("")+'</span><span class="desc">'+VARIANTS[S.variant]+'</span>';
+ vs.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{S.variant=b.dataset.k;renderAll();});}
+function renderAll(){
+ renderBar();
+ const main=document.getElementById("main");main.innerHTML=S.variant==="A"?viewDrill():viewExplorer();
+ main.querySelectorAll("[data-nav]").forEach(b=>b.onclick=()=>{const n=b.dataset.nav;if(n==="root"){S.obj=null;S.task=null;}else if(n==="obj"){S.task=null;}else if(n==="up"){S.task?S.task=null:S.obj=null;}renderAll();});
+ main.querySelectorAll("[data-obj]:not([data-nav])").forEach(b=>b.onclick=()=>{
+  const o=b.dataset.obj,t=b.dataset.task;
+  if(b.dataset.toggle&&S.obj===o&&!S.task){S.open.has(o)?S.open.delete(o):S.open.add(o);renderAll();return;}
+  S.obj=o;S.task=t||null;if(S.variant==="B")S.open.add(o);renderAll();});
+ main.querySelectorAll("[data-task]:not([data-obj])").forEach(b=>b.onclick=()=>{S.task=b.dataset.task;renderAll();});
+}
+renderAll();
+</script>
+</body>
+</html>

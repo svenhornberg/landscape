@@ -1,0 +1,9 @@
+- id: angebot
+  name: Angebot
+  aufgaben:
+    - {id: erstellen, name: erstellen}
+    - {id: versenden, name: versenden}
+- id: kunde
+  name: Kunde
+  aufgaben:
+    - {id: anlegen, name: anlegen}

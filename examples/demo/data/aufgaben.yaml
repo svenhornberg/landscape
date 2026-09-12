@@ -1,0 +1,27 @@
+- id: angebot
+  name: Angebot
+  aufgaben:
+    - {id: erstellen, name: erstellen}
+    - {id: versenden, name: versenden}
+    - {id: nachfassen, name: nachfassen}
+- id: bestellung
+  name: Bestellung
+  aufgaben:
+    - {id: erfassen, name: erfassen}
+    - {id: pruefen, name: prüfen}
+    - {id: versenden, name: versenden}
+- id: kunde
+  name: Kunde
+  aufgaben:
+    - {id: anlegen, name: anlegen}
+    - {id: bonitaet, name: Bonität prüfen}
+- id: rechnung
+  name: Rechnung
+  aufgaben:
+    - {id: erstellen, name: erstellen}
+    - {id: mahnen, name: mahnen}
+- id: retoure
+  name: Retoure
+  aufgaben:
+    - {id: erfassen, name: erfassen}
+    - {id: erstatten, name: erstatten}

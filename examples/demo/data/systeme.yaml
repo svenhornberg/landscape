@@ -1,0 +1,36 @@
+- id: erp
+  name: ERP
+  verantwortlich: IT Core
+  status: aktiv
+  seit: 2011
+- id: shop
+  name: Shopsystem
+  verantwortlich: E-Commerce
+  status: aktiv
+  seit: 2019
+- id: crm
+  name: CRM
+  verantwortlich: Vertrieb
+  status: aktiv
+  seit: 2021
+  notiz: Rollout bisher nur Geschaeftskunden
+- id: excel
+  name: Excel
+  status: aktiv
+  notiz: kein Verantwortlicher, Dateien liegen auf Abteilungslaufwerken
+- id: ticket
+  name: Ticketsystem
+  verantwortlich: Kundenservice
+  status: aktiv
+  seit: 2020
+- id: mahn
+  name: Mahnlauf-Tool
+  verantwortlich: Buchhaltung
+  status: auslaufend
+  seit: 2014
+  ende: 2027
+- id: oms
+  name: Order-Management
+  verantwortlich: E-Commerce
+  status: geplant
+  seit: 2027

@@ -1,0 +1,13 @@
+geschaeftsfelder:
+  - id: gk
+    name: Geschaeftskunden
+
+abteilungen:
+  - id: vertrieb
+    name: Vertrieb
+    geschaeftsfelder: [gk]
+    bearbeitet: [angebot, kunde]
+  - id: service
+    name: Kundenservice
+    geschaeftsfelder: [gk]
+    bearbeitet: [angebot, kunde]

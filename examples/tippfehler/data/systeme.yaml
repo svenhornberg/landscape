@@ -1,0 +1,18 @@
+# Kleiner Datensatz mit absichtlich falschen IDs in
+# data/zuordnungen/geschaeftskunden.md. Zum Ausprobieren:
+#
+#     bplan validate examples/tippfehler
+#
+- id: erp
+  name: ERP
+  verantwortlich: IT Core
+  status: aktiv
+  seit: 2011
+- id: shop
+  name: Shopsystem
+  verantwortlich: E-Commerce
+  status: aktiv
+  seit: 2019
+- id: excel
+  name: Excel
+  status: aktiv
