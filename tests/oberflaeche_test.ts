@@ -501,8 +501,8 @@ Deno.test(
       assert(await seite.locator("#systemweg").isVisible(), "kein x zum Aufheben");
       assertEquals(await seite.evaluate("location.hash"), "#system=crm");
       assertStringIncludes(
-        (await seite.textContent("#systemleiste")) ?? "",
-        "CRM: 5 Zuordnungen · 4 Aufgaben · 2 Abteilungen",
+        (await seite.textContent(".legend")) ?? "",
+        "CRM im Einsatz: 5 Zuordnungen · 4 Aufgaben · 2 Abteilungen",
       );
 
       // Baum und Ebene 1: nur Angebot und Kunde, die Spalten bleiben alle
@@ -561,7 +561,6 @@ Deno.test(
       await seite.locator('.tree .node.d2[data-aufgabe="erstellen"]').click();
       assertEquals(await seite.locator(".way.mark").count(), 1);
       assertEquals(await seite.locator(".way.dim").count(), 1);
-      assertStringIncludes((await seite.textContent(".legend")) ?? "", "CRM im Einsatz");
 
       // Abwahl: alles wieder da, der Rest der Adresse bleibt
       await seite.locator("#systemweg").click();
@@ -592,3 +591,36 @@ Deno.test(
     });
   },
 );
+
+// ---------------------------------------------------------------------------
+// Die Systemwahl bleibt an ihrem Platz, ob etwas gewaehlt ist oder nicht
+// ---------------------------------------------------------------------------
+
+Deno.test("Die Systemwahl springt beim Auswaehlen nicht", OHNE_SANITIZER, async () => {
+  for (const breite of [1300, 1000]) {
+    await mitSeite(DEMO, async (seite) => {
+      await seite.setViewportSize({ width: breite, height: 900 });
+      const vorher = await seite.locator("#systemwahl").boundingBox();
+      const chipsVorher = await seite.locator("#gfleiste").boundingBox();
+      await seite.selectOption("#systemwahl", "crm");
+      const nachher = await seite.locator("#systemwahl").boundingBox();
+      const chipsNachher = await seite.locator("#gfleiste").boundingBox();
+      assert(vorher && nachher && chipsVorher && chipsNachher);
+      assertEquals(
+        [nachher.x, nachher.y],
+        [vorher.x, vorher.y],
+        `bei ${breite}px verschoben`,
+      );
+      assertEquals([chipsNachher.x, chipsNachher.y], [chipsVorher.x, chipsVorher.y]);
+      // die Auswahl steht rechts neben den Geschaeftsfeldern, nicht darunter
+      assert(
+        nachher.x > chipsNachher.x,
+        "Systemwahl steht nicht rechts der Geschaeftsfelder",
+      );
+      assert(
+        Math.abs(nachher.y - chipsNachher.y) < 20,
+        "Systemwahl steht nicht in derselben Zeile",
+      );
+    });
+  }
+});

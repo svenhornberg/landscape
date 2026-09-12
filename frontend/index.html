@@ -22,14 +22,21 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
    nehmen die Breite des Kastens und brechen darin um. */
 .top{display:flex;align-items:baseline;gap:24px;padding:20px 28px 0;flex-wrap:wrap;width:0;min-width:100%}
 .top h1{font-size:22px}.top .sub{color:var(--ink-2)}.top .right{margin-left:auto;color:var(--ink-2)}
-.bar{display:flex;align-items:center;gap:12px 32px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap;width:0;min-width:100%}
+/* Die Systemwahl steht immer an derselben Stelle rechts neben den
+   Geschaeftsfeldern: die Leiste bricht nicht zwischen den Gruppen um, nur die
+   Chips innerhalb einer Gruppe. Nichts in der Leiste aendert seine Breite mit
+   der Auswahl. */
+.bar{display:flex;align-items:flex-start;gap:12px 32px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:nowrap;width:0;min-width:100%}
+#gfleiste{flex:0 1 auto;min-width:0}
+#systemleiste{flex:none;flex-wrap:nowrap}
 .bar .treffer{color:var(--ink);font-weight:500}
 .group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.group .lbl{color:var(--ink-2);margin-right:4px}
 .chip{padding:5px 11px;border:1px solid var(--line-2);border-radius:999px;background:var(--panel)}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 select.chip{font:inherit;color:inherit;background:var(--panel);cursor:pointer;padding:4px 8px}
-select.chip.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}
+select.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 #systemweg{padding:5px 9px;margin-left:-4px}
+#systemweg.leer{visibility:hidden}
 .warnknopf{margin-left:auto;padding:5px 11px;border:1px solid var(--h2);border-radius:999px;background:var(--h2);color:var(--h2-ink)}
 .warnliste{margin:16px 28px 0;width:0;min-width:calc(100% - 56px);padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
 .warnliste ul{margin:0;padding-left:18px}.warnliste li{color:var(--ink-2);margin:2px 0}
@@ -109,14 +116,14 @@ table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justif
 .pane{overflow:auto;min-width:0}
 .pane .ph{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
 .pane .ph h2{font-size:16px}.pane .ph .meta{color:var(--ink-2)}
-@media (max-width:720px){.explorer{grid-template-columns:1fr}.tree{border-right:0;border-bottom:1px solid var(--line);max-height:30vh}}
+@media (max-width:720px){.explorer{grid-template-columns:1fr}.tree{border-right:0;border-bottom:1px solid var(--line);max-height:30vh}.bar{flex-wrap:wrap}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <div class="seite">
 <div class="top"><h1>Bebauungsplan</h1><span class="sub" id="stand"></span><span class="right" id="zahlen"></span></div>
-<div class="bar"><div class="group" id="gfleiste"><span class="lbl">Geschäftsfeld</span></div><div class="group" id="systemleiste"><span class="lbl">System</span><select class="chip" id="systemwahl" title="Nur zeigen, was mit diesem System gemacht wird"></select><button class="chip on" id="systemweg" title="Systemfilter aufheben" hidden>×</button><span class="lbl treffer" id="systemtreffer" hidden></span></div><button class="warnknopf" id="warnknopf" hidden></button></div>
+<div class="bar"><div class="group" id="gfleiste"><span class="lbl">Geschäftsfeld</span></div><div class="group" id="systemleiste"><span class="lbl">System</span><select class="chip" id="systemwahl" title="Nur zeigen, was mit diesem System gemacht wird"></select><button class="chip on leer" id="systemweg" title="Systemfilter aufheben">×</button></div><button class="warnknopf" id="warnknopf" hidden></button></div>
 <div class="warnliste" id="warnliste" hidden></div>
 <div class="stage"><div class="card" id="haupt"></div></div>
 </div>
@@ -317,7 +324,7 @@ function systemZusammenfassung() {
     aufgaben[z.objekt + "." + z.aufgabe] = true;
     abteilungen[z.abteilung] = true;
   });
-  return systemName() + ": " + wege + (wege === 1 ? " Zuordnung" : " Zuordnungen") +
+  return wege + (wege === 1 ? " Zuordnung" : " Zuordnungen") +
     " · " + Object.keys(aufgaben).length + " Aufgaben · " +
     Object.keys(abteilungen).length + " Abteilungen";
 }
@@ -430,7 +437,8 @@ function legende() {
   '<span><span class="sys aktiv">aktiv</span> <span class="sys auslaufend">auslaufend</span> ' +
   '<span class="sys geplant">geplant</span></span>' +
   (zustand.system
-    ? '<span><span class="sw mark"></span>' + esc(systemName()) + " im Einsatz, Rest zurückgenommen</span>"
+    ? '<span><span class="sw mark"></span>' + esc(systemName()) + " im Einsatz: " +
+      systemZusammenfassung() + "; Rest zurückgenommen</span>"
     : "") +
   "</div>";
 }
@@ -675,13 +683,10 @@ function zeichneKopf() {
   wahl.className = "chip" + (zustand.system ? " on" : "");
   wahl.onchange = function () { zustand.system = wahl.value || null; zeichne(); };
 
+  // Das x behaelt seinen Platz, damit nichts springt, wenn es erscheint.
   var weg = document.getElementById("systemweg");
-  weg.hidden = !zustand.system;
+  weg.className = "chip on" + (zustand.system ? "" : " leer");
   weg.onclick = function () { zustand.system = null; zeichne(); };
-
-  var treffer = document.getElementById("systemtreffer");
-  treffer.hidden = !zustand.system;
-  treffer.textContent = zustand.system ? systemZusammenfassung() : "";
 
   zeichneWarnungen(modell.warnungen || []);
 }
