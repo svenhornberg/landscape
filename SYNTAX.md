@@ -32,7 +32,7 @@ Abteilung sind Redundanz, keine ist ein White Spot.
 Der Aufruf, vom Verzeichnis aus, das `data/` enthält:
 
 ```bash
-BPLAN=https://raw.githubusercontent.com/svenhornberg/landscape/345dac8ad3408167c819a4428b1a067a63f71755/cli.ts
+BPLAN=https://raw.githubusercontent.com/svenhornberg/landscape/c68921fc3ecfcf0feeabf9efcbeb606b7539d5e7/cli.ts
 deno run --allow-read --allow-write "$BPLAN" validate .
 deno run --allow-read --allow-write "$BPLAN" make . -o out/index.html
 ```
