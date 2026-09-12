@@ -527,6 +527,146 @@ Deno.test(
 );
 
 // ---------------------------------------------------------------------------
+// Zentralfunktion: ein Geschaeftsfeld mit zentral: true. Die Buchhaltung gibt
+// es einmal fuer alle, ihre Zeilen stehen einmal und zaehlen ueberall mit.
+// ---------------------------------------------------------------------------
+
+const ZENTRAL = `${tmp}/zentral`;
+Deno.mkdirSync(`${ZENTRAL}/data/zuordnungen`, { recursive: true });
+Deno.writeTextFileSync(
+  `${ZENTRAL}/data/systeme.yaml`,
+  "- id: erp\n  name: ERP\n  status: aktiv\n- id: crm\n  name: CRM\n  status: aktiv\n" +
+    "- id: shop\n  name: Shopsystem\n  status: aktiv\n",
+);
+Deno.writeTextFileSync(
+  `${ZENTRAL}/data/organisation.yaml`,
+  "geschaeftsfelder:\n  - id: pk\n    name: Privatkunden\n  - id: gk\n    name: Geschaeftskunden\n" +
+    "  - id: zentral\n    name: Zentralfunktion\n    zentral: true\n" +
+    "abteilungen:\n" +
+    "  - id: vertrieb\n    name: Vertrieb\n    geschaeftsfelder: [gk]\n    bearbeitet: [angebot, kunde]\n" +
+    "  - id: service\n    name: Kundenservice\n    geschaeftsfelder: [pk, gk]\n    bearbeitet: [kunde]\n" +
+    "  - id: buchhaltung\n    name: Buchhaltung\n    geschaeftsfelder: [zentral]\n" +
+    "    bearbeitet: [rechnung, kunde]\n",
+);
+Deno.writeTextFileSync(
+  `${ZENTRAL}/data/aufgaben.yaml`,
+  "- id: angebot\n  name: Angebot\n  aufgaben:\n    - {id: erstellen, name: erstellen}\n" +
+    "- id: kunde\n  name: Kunde\n  aufgaben:\n    - {id: anlegen, name: anlegen}\n" +
+    "    - {id: sperren, name: sperren}\n" +
+    "- id: rechnung\n  name: Rechnung\n  aufgaben:\n    - {id: erstellen, name: erstellen}\n",
+);
+const KOPF = "| Abteilung | Aufgabe | System | Anmerkung |\n|---|---|---|---|\n";
+Deno.writeTextFileSync(
+  `${ZENTRAL}/data/zuordnungen/gk.md`,
+  "---\ngeschaeftsfeld: gk\n---\n\n" + KOPF +
+    "| vertrieb | angebot.erstellen | crm | |\n| vertrieb | kunde.anlegen | crm | |\n" +
+    "| service | kunde.anlegen | crm | |\n",
+);
+Deno.writeTextFileSync(
+  `${ZENTRAL}/data/zuordnungen/pk.md`,
+  "---\ngeschaeftsfeld: pk\n---\n\n" + KOPF + "| service | kunde.anlegen | shop | |\n",
+);
+Deno.writeTextFileSync(
+  `${ZENTRAL}/data/zuordnungen/zentral.md`,
+  "---\ngeschaeftsfeld: zentral\n---\n\n" + KOPF +
+    "| buchhaltung | rechnung.erstellen | erp | |\n| buchhaltung | kunde.sperren | erp | |\n",
+);
+const ZENTRAL_SEITE = gebauteSeite(ZENTRAL, `${tmp}/zentral.html`);
+
+Deno.test(
+  "Eine Zentralfunktion gilt in jedem Geschaeftsfeld mit",
+  OHNE_SANITIZER,
+  async () => {
+    await mitSeite(ZENTRAL_SEITE, async (seite) => {
+      // Chips: Alle, die Geschaeftsfelder, dann abgetrennt die Zentralfunktion
+      assertEquals(await seite.locator("#gfleiste .chip").allTextContents(), [
+        "Alle",
+        "Privatkunden",
+        "Geschaeftskunden",
+        "Zentralfunktion",
+      ]);
+      assertEquals(await seite.locator("#gfleiste .chip.zentral").count(), 1);
+      assertEquals(await seite.locator("#gfleiste .chip-trenner").count(), 1);
+
+      // Privatkunden: die Buchhaltung bleibt sichtbar, ihre zentralen Zeilen
+      // zaehlen mit. Kunde: Service hat anlegen (Shop) und sperren offen, die
+      // Buchhaltung sperren (ERP) und anlegen offen. Angebot: nur der Vertrieb
+      // ist zustaendig, und der arbeitet hier nicht.
+      await seite.locator("#gfleiste .chip", { hasText: "Privatkunden" }).click();
+      assertEquals(await seite.locator("thead th").allTextContents(), [
+        "Objekt",
+        "Kundenservice",
+        "Buchhaltung",
+      ]);
+      assertStringIncludes(
+        (await seite.locator("thead th").nth(2).getAttribute("title")) ?? "",
+        "Zentralfunktion",
+      );
+      assert(
+        await zelle(seite, "rechnung", 1).evaluate((e) => e.classList.contains("n1")),
+      );
+      assertEquals(
+        await zelle(seite, "kunde", 0).locator(".sub").textContent(),
+        "1 offen",
+      );
+      assertEquals(
+        await zelle(seite, "kunde", 1).locator(".sub").textContent(),
+        "1 offen",
+      );
+      assertEquals(
+        await seite.locator('tr:has(button[data-objekt="angebot"]) td.na').count(),
+        2,
+      );
+
+      // Ebene 3 fuer Kunde sperren: Spalten Privatkunden und Zentralfunktion.
+      // Die graue Zelle der Buchhaltung verweist auf ihre Spalte.
+      await seite.locator('.tree .node[data-objekt="kunde"]').click();
+      await seite.locator('.tree .node.d2[data-aufgabe="sperren"]').click();
+      assertEquals(await seite.locator("table.l3 thead th").allTextContents(), [
+        "Abteilung",
+        "Privatkunden",
+        "Zentralfunktion",
+      ]);
+      assertEquals(await seite.locator("table.l3 th.row .n").allTextContents(), [
+        "offen",
+        "1 System",
+      ]);
+      const buchhaltung = seite.locator("table.l3 tbody tr").nth(1);
+      assert(
+        await buchhaltung.locator("td").nth(0).evaluate((e) =>
+          e.classList.contains("na")
+        ),
+      );
+      assertStringIncludes(
+        (await buchhaltung.locator("td").nth(0).getAttribute("title")) ?? "",
+        "ist zentral",
+      );
+      assertEquals(
+        await buchhaltung.locator("td").nth(1).locator(".sys").allTextContents(),
+        ["ERP"],
+      );
+
+      // Die Zentralfunktion selbst gewaehlt: nur noch die Buchhaltung
+      await seite.locator("#gfleiste .chip", { hasText: "Zentralfunktion" }).click();
+      assertEquals(
+        await seite.evaluate("location.hash"),
+        "#gf=zentral&objekt=kunde&aufgabe=sperren",
+      );
+      assertEquals(await seite.locator("table.l3 thead th").allTextContents(), [
+        "Abteilung",
+        "Zentralfunktion",
+      ]);
+      assertEquals(await seite.locator("table.l3 tbody tr").count(), 1);
+      await seite.locator('.tree .node[data-ziel="wurzel"]').click();
+      assertEquals(await seite.locator("thead th").allTextContents(), [
+        "Objekt",
+        "Buchhaltung",
+      ]);
+    });
+  },
+);
+
+// ---------------------------------------------------------------------------
 // Permalink: die Ansicht steht in der Adresse
 // ---------------------------------------------------------------------------
 

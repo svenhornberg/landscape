@@ -379,6 +379,35 @@ mitDatensatz("F10 Status fehlt ganz", (d) => {
     .erwarte('System "shop" hat keinen Status (erlaubt: aktiv, auslaufend, geplant)');
 });
 
+mitDatensatz("zentral: true wird gelesen und landet im Modell", (d) => {
+  d.schreibe(
+    "data/organisation.yaml",
+    ORGANISATION.replace(
+      "    name: Geschaeftskunden\n",
+      "    name: Geschaeftskunden\n  - id: zentral\n    name: Zentralfunktion\n    zentral: true\n",
+    ),
+  );
+  d.pruefe().erwarteCode(0);
+  d.mache("out/plan.html").erwarteCode(0);
+  const html = d.lies("out/plan.html");
+  assert(html.includes('"id":"zentral","name":"Zentralfunktion","zentral":true'), html);
+  assert(html.includes('"id":"gk","name":"Geschaeftskunden","zentral":false'), html);
+});
+
+mitDatensatz("zentral muss true oder false sein", (d) => {
+  d.schreibe(
+    "data/organisation.yaml",
+    ORGANISATION.replace(
+      "    name: Geschaeftskunden\n",
+      "    name: Geschaeftskunden\n    zentral: ja\n",
+    ),
+  );
+  d.pruefe()
+    .erwarteCode(1)
+    .erwarte("data/organisation.yaml")
+    .erwarte('Feld "zentral" ist kein Wahrheitswert (true oder false)');
+});
+
 mitDatensatz("F11 ID verletzt das Muster", (d) => {
   d.schreibe(
     "data/organisation.yaml",

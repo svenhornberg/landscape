@@ -109,17 +109,32 @@ geschaeftsfelder:
   - id: gk
     name: Geschaeftskunden
 
+  - id: zentral
+    name: Zentralfunktion
+    zentral: true                   # gilt in jedem Geschäftsfeld mit
+
 abteilungen:
   - id: vertrieb
     name: Vertrieb
     geschaeftsfelder: [pk, gk]      # in welchen Säulen die Abteilung arbeitet
     bearbeitet: [angebot, bestellung, rechnung, kunde]
                                     # für welche Objekte sie zuständig ist
+  - id: buchhaltung
+    name: Buchhaltung
+    geschaeftsfelder: [zentral]     # einmal für alle, nicht je Säule
+    bearbeitet: [rechnung, kunde]
 ```
 
 `bearbeitet` ist die Zuständigkeitsregel. Ohne sie gibt es keine White
 Spots, nur leere Zellen. Eine Abteilung × Aufgabe ohne Zuordnung ist
 ein White Spot genau dann, wenn das Objekt in `bearbeitet` steht.
+
+Ein Geschäftsfeld mit `zentral: true` ist keine Säule, sondern der Ort für
+Abteilungen, die es einmal für alle gibt. Ihre Zuordnungen stehen einmal in
+der Datei dieses Geschäftsfelds und zählen in jedem Filter mit: Wer "Miete"
+wählt, sieht die zentralen Abteilungen und ihre Wege dazu. Als eigener
+Filter gewählt zeigt es nur die zentralen Abteilungen. In der Filterleiste
+steht es abgetrennt hinter den Säulen, in Ebene 3 ist es eine eigene Spalte.
 
 ### aufgaben.yaml
 
@@ -208,7 +223,7 @@ ausgeben (Levenshtein-Distanz ≤ 3).
 ```json
 {
   "generiert": "2026-09-12T14:03:00",
-  "geschaeftsfelder": [{"id":"gk","name":"Geschaeftskunden"}],
+  "geschaeftsfelder": [{"id":"gk","name":"Geschaeftskunden","zentral":false}],
   "abteilungen": [{"id":"vertrieb","name":"Vertrieb","geschaeftsfelder":["pk","gk"],"bearbeitet":["angebot"]}],
   "systeme": [{"id":"crm","name":"CRM","status":"aktiv","verantwortlich":"Vertrieb","seit":2021,"ende":null}],
   "objekte": [{"id":"angebot","name":"Angebot","aufgaben":[{"id":"erstellen","name":"erstellen"}]}],
@@ -263,6 +278,8 @@ gepunktet.
 
 Definitionen, die das Frontend berechnet:
 
+- Filter: das gewählte Geschäftsfeld plus alle zentralen; ein zentrales
+  gewählt zählt allein; "Alle" zählt alles.
 - Wege einer Zelle (Aufgabe × Abteilung, im aktuellen Filter):
   Anzahl verschiedener Systeme über alle gefilterten Geschäftsfelder.
 - Redundanz: Wege ≥ 2.

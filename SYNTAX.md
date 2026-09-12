@@ -88,6 +88,10 @@ geschaeftsfelder:
   - id: gk
     name: Geschaeftskunden
 
+  - id: zentral
+    name: Zentralfunktion
+    zentral: true                            # optional, Standard false
+
 abteilungen:
   - id: vertrieb
     name: Vertrieb
@@ -95,7 +99,7 @@ abteilungen:
     bearbeitet: [angebot, bestellung, kunde] # für welche Objekte zuständig
   - id: buchhaltung
     name: Buchhaltung
-    geschaeftsfelder: [pk, gk]
+    geschaeftsfelder: [zentral]              # einmal für alle
     bearbeitet: [rechnung, kunde]
 ```
 
@@ -110,6 +114,12 @@ abteilungen:
   ein Objekt, das nicht in `bearbeitet` steht, gibt eine Warnung (W3).
 - Beide Listen dürfen nur bekannte IDs enthalten (F9). `bearbeitet` leer
   gibt eine Warnung (W7), eine Abteilung ohne einzige Zuordnung auch (W5).
+- `zentral: true` an einem Geschäftsfeld macht es zur Zentralfunktion: Die
+  Abteilungen darin gibt es einmal für alle, ihre Zuordnungen stehen einmal
+  in der Datei dieses Geschäftsfelds und zählen in jedem Filter mit. Als
+  eigener Filter gewählt zeigt es nur diese Abteilungen. Der Wert muss
+  `true` oder `false` sein, sonst bricht das Lesen ab. Eine Abteilung, die
+  zentral ist, steht nur in zentralen Geschäftsfeldern.
 - Die YAML-Kurzschreibweise `[a, b]` und die lange mit `- a` sind gleich.
 
 ## aufgaben.yaml
@@ -202,6 +212,7 @@ Freitext ist erlaubt und wird ignoriert, auch Überschriften und Listen.
 
 - **Zuständig** ist eine Abteilung für eine Aufgabe, wenn das Objekt in
   ihrem `bearbeitet` steht und sie im gefilterten Geschäftsfeld arbeitet.
+  Der Filter ist das gewählte Geschäftsfeld plus alle zentralen.
 - **Wege** einer Zelle (Aufgabe × Abteilung) sind die verschiedenen Systeme
   über alle gefilterten Geschäftsfelder.
 - **1 System** grün, **2 Systeme** gelb und redundant, **3 und mehr** rot.

@@ -115,6 +115,10 @@ Die Oberfläche ist ein Explorer. Links ein Baum aus Objekten und Aufgaben
 3. **Aufgabe** – Abteilung × Geschäftsfeld, die Zelle zeigt die Systeme mit
    Anmerkung daneben; die Fundstelle in den Daten steht im Tooltip des Chips.
 
+Ein Geschäftsfeld mit `zentral: true` ist eine Zentralfunktion: Ihre
+Abteilungen gibt es einmal für alle, ihre Wege zählen in jedem Filter mit,
+und als eigener Chip gewählt zeigt der Plan nur sie.
+
 Farbcode überall gleich: ein System grün, zwei gelb, drei oder mehr rot, ein
 White Spot schraffiert. Chips für Systeme sind voll umrandet bei `aktiv`,
 gestrichelt bei `auslaufend`, gepunktet bei `geplant`.

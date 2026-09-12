@@ -31,6 +31,11 @@ export interface System {
 export interface Geschaeftsfeld {
   id: string;
   name: string;
+  /**
+   * Zentralfunktion: Zuordnungen hier gelten in jedem Geschäftsfeld mit. Die
+   * Abteilungen darin gibt es einmal für alle, nicht je Geschäftsfeld.
+   */
+  zentral: boolean;
 }
 
 /** Eine Abteilung aus `organisation.yaml`. */

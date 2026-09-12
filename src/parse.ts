@@ -227,6 +227,13 @@ function pflichtText(wert: Record<string, unknown>, feld: string): string {
   return v;
 }
 
+function wahrheitswertOderFalse(wert: Record<string, unknown>, feld: string): boolean {
+  const v = wert[feld];
+  if (v === undefined || v === null) return false;
+  if (typeof v === "boolean") return v;
+  throw new TypeError(`Feld "${feld}" ist kein Wahrheitswert (true oder false)`);
+}
+
 function textOderNull(wert: Record<string, unknown>, feld: string): string | null {
   const v = wert[feld];
   if (v === undefined || v === null) return null;
@@ -303,6 +310,7 @@ function baueOrganisation(wert: unknown): Organisation {
     geschaeftsfelder: alsObjekte(o.geschaeftsfelder).map((e) => ({
       id: pflichtText(e, "id"),
       name: pflichtText(e, "name"),
+      zentral: wahrheitswertOderFalse(e, "zentral"),
     })),
     abteilungen: alsObjekte(o.abteilungen).map((e) => ({
       id: pflichtText(e, "id"),

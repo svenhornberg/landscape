@@ -32,6 +32,8 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.group .lbl{color:var(--ink-2);margin-right:4px}
 .chip{padding:5px 11px;border:1px solid var(--line-2);border-radius:999px;background:var(--panel)}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* Zentralfunktion: ein Strich trennt sie von den Geschaeftsfeldern */
+.chip-trenner{width:1px;height:22px;background:var(--line-2);margin:0 2px;align-self:center}
 select.chip{font:inherit;color:inherit;background:var(--panel);cursor:pointer;padding:4px 8px}
 select.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 #systemweg{padding:5px 9px;margin-left:-4px}
@@ -391,13 +393,26 @@ function objektZelle(objekt, abteilungId) {
   return {max: max, luecken: luecken};
 }
 
+/// Zentral ist eine Abteilung, wenn sie nur in zentralen Geschaeftsfeldern
+/// arbeitet: es gibt sie einmal fuer alle, nicht je Geschaeftsfeld.
+function istZentral(gfId) {
+  var g = nachGf[gfId];
+  return g ? g.zentral === true : false;
+}
+
+function abteilungZentral(a) {
+  return a.geschaeftsfelder.length > 0 && a.geschaeftsfelder.every(istZentral);
+}
+
 /// Eine Abteilung ist sichtbar, wenn sie in mindestens einem gefilterten
 /// Geschaeftsfeld arbeitet, und zustaendig, wenn das Objekt in `bearbeitet`
-/// steht. Nur dort gibt es White Spots.
+/// steht. Nur dort gibt es White Spots. Zentrale Geschaeftsfelder gelten in
+/// jedem anderen mit; nur wenn eines selbst gewaehlt ist, zaehlt es allein.
 function filterVorbereiten() {
   gfFilter = {};
   modell.geschaeftsfelder.forEach(function (g) {
-    if (zustand.gf === "alle" || zustand.gf === g.id) gfFilter[g.id] = true;
+    var gewaehlt = zustand.gf === "alle" || zustand.gf === g.id;
+    if (gewaehlt || (g.zentral === true && !istZentral(zustand.gf))) gfFilter[g.id] = true;
   });
   sichtbareAbteilungen = modell.abteilungen.filter(function (a) {
     return a.geschaeftsfelder.some(function (id) { return gfFilter[id] === true; });
@@ -444,6 +459,14 @@ function badge(befunde) {
   return "";
 }
 
+/// Spaltenkopf fuer eine Abteilung; zentrale sagen es im Tooltip.
+function kopfzelle(a) {
+  return abteilungZentral(a)
+    ? '<th title="' + esc(a.name + " ist Zentralfunktion und gilt in jedem Geschäftsfeld") +
+      '">' + esc(a.name) + "</th>"
+    : "<th>" + esc(a.name) + "</th>";
+}
+
 /// Bilanz einer Zeile in Ebene 3, in den Worten der Legende.
 function wortWege(anzahl) {
   return anzahl === 0 ? "offen" : anzahl === 1 ? "1 System" : anzahl + " Systeme · redundant";
@@ -483,7 +506,7 @@ function ebeneObjekte() {
   }
   var objekte = zustand.system ? modell.objekte.filter(objektNutzt) : modell.objekte;
   var html = '<table class="lvl"><thead><tr><th>Objekt</th>';
-  sichtbareAbteilungen.forEach(function (a) { html += "<th>" + esc(a.name) + "</th>"; });
+  sichtbareAbteilungen.forEach(function (a) { html += kopfzelle(a); });
   html += "</tr></thead><tbody>";
 
   objekte.forEach(function (o) {
@@ -549,7 +572,7 @@ function ebeneObjekt(objekt) {
       esc(objekt.name) + " nicht vor. Links stehen die Objekte, bei denen es vorkommt.</div>";
   }
   var html = '<table class="lvl"><thead><tr><th>Aufgabe</th>';
-  abteilungen.forEach(function (a) { html += "<th>" + esc(a.name) + "</th>"; });
+  abteilungen.forEach(function (a) { html += kopfzelle(a); });
   html += "</tr></thead><tbody>";
 
   aufgaben.forEach(function (auf) {
@@ -609,7 +632,9 @@ function ebeneAufgabe(objekt, aufgabe) {
     felder.forEach(function (g) {
       if (a.geschaeftsfelder.indexOf(g.id) < 0) {
         html += '<td class="c na' + hervor(false) + '" title="' +
-          esc(a.name + " arbeitet nicht im Geschäftsfeld " + g.name) + '"></td>';
+          esc(abteilungZentral(a)
+            ? a.name + " ist zentral, der Weg steht in der Spalte der Zentralfunktion"
+            : a.name + " arbeitet nicht im Geschäftsfeld " + g.name) + '"></td>';
         return;
       }
       var zeilen = alle.filter(function (z) { return z.gf === g.id; });
@@ -723,11 +748,20 @@ function zeichneKopf() {
     modell.zuordnungen.length + " Zuordnungen";
 
   var leiste = document.getElementById("gfleiste");
-  Array.prototype.forEach.call(leiste.querySelectorAll(".chip"), function (c) { c.remove(); });
+  Array.prototype.forEach.call(leiste.querySelectorAll(".chip, .chip-trenner"), function (c) {
+    c.remove();
+  });
   [{id: "alle", name: "Alle"}].concat(modell.geschaeftsfelder).forEach(function (g) {
+    if (g.zentral === true) {
+      var trenner = document.createElement("span");
+      trenner.className = "chip-trenner";
+      leiste.appendChild(trenner);
+    }
     var knopf = document.createElement("button");
-    knopf.className = "chip" + (zustand.gf === g.id ? " on" : "");
+    knopf.className = "chip" + (g.zentral === true ? " zentral" : "") +
+      (zustand.gf === g.id ? " on" : "");
     knopf.textContent = g.name;
+    if (g.zentral === true) knopf.title = g.name + " gilt in jedem Geschäftsfeld mit";
     knopf.onclick = function () { zustand.gf = g.id; zeichne(); };
     leiste.appendChild(knopf);
   });

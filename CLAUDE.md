@@ -27,7 +27,8 @@ CRM, Shopsystem, Ticketsystem und allgegenwärtige Werkzeuge wie Excel.
 
 Alle Beispiele verwenden durchgängig einen erfundenen Versandhandel:
 
-- Geschäftsfelder: `pk` Privatkunden, `gk` Geschäftskunden, `mp` Marktplatz
+- Geschäftsfelder: `pk` Privatkunden, `gk` Geschäftskunden, `mp` Marktplatz,
+  dazu `zentral` Zentralfunktion (`zentral: true`)
 - Abteilungen: `vertrieb`, `service`, `lager`, `buchhaltung`, `marktplatz`
 - Systeme: `erp`, `shop`, `crm`, `excel`, `ticket`, `mahn`, `oms`
 - Objekte: `angebot`, `bestellung`, `kunde`, `rechnung`, `retoure`
