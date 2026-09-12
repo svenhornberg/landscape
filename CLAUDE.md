@@ -109,8 +109,8 @@ Dasselbe gilt im privaten Datenrepo, schon aus Gewohnheit.
   dieses Repos nicht, ein blosser Name waere dort nicht auflösbar. Die
   Lint-Regel `no-import-prefix` ist deshalb in `deno.json` abgeschaltet.
 - Jede Validierungsregel trägt eine Nummer (F1 bis F13, W1 bis W7). Die
-  Liste steht im Kopf von `src/validate.rs`. Eine neue Regel bekommt eine
-  Nummer, einen Eintrag dort und einen Testfall in `tests/regeln.rs`.
+  Liste steht im Kopf von `src/validate.ts`. Eine neue Regel bekommt eine
+  Nummer, einen Eintrag dort und einen Testfall in `tests/regeln_test.ts`.
 - Getestet wird über die aufgerufene CLI, damit die Ausgabe mit
   `Datei:Zeile` und Vorschlag mitgeprüft wird.
 - Keine zusätzlichen Abhängigkeiten ohne Grund. Es gibt genau eine,
@@ -121,9 +121,9 @@ Dasselbe gilt im privaten Datenrepo, schon aus Gewohnheit.
   Text-Import herein, gehört also zum Modulgraphen und wird beim
   Remote-Aufruf mitgeladen und gecacht. `make` ersetzt darin den
   Platzhalter `<!--MODEL-->` durch das Modell als JSON.
-- Alle Kennzahlen rechnet das Frontend, das Binary liefert nur das
+- Alle Kennzahlen rechnet das Frontend, das Werkzeug liefert nur das
   validierte Modell. Neue Kennzahlen gehoeren deshalb ins Frontend, nicht
-  nach `model.rs`.
+  nach `model.ts`.
 
 ## Entscheidungen, die von SPEC.md abweichen oder sie ergänzen
 

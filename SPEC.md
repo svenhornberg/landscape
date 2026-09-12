@@ -221,7 +221,7 @@ ausgeben (Levenshtein-Distanz ≤ 3).
 
 `quelle` ist Datei und Zeile, damit das Frontend bei jedem Weg zeigen
 kann, wo er herkommt. Alle Kennzahlen (Redundanz, White Spots, max je
-Zelle) berechnet das Frontend selbst aus den Rohdaten; das Binary
+Zelle) berechnet das Frontend selbst aus den Rohdaten; das Werkzeug
 liefert nur das validierte Modell. So bleibt die Logik an einer Stelle.
 
 ## Frontend
@@ -322,7 +322,7 @@ im Tool-Repo. Das Tool ist generisch.
 
 Reihenfolge, die sich anbietet:
 
-1. `model.rs` + `parse.rs` + `validate` mit dem Beispieldatensatz,
+1. `model.ts` + `parse.ts` + `validate` mit dem Beispieldatensatz,
    bis `bplan validate examples/demo` sauber läuft und jede Regel einen
    Testfall hat.
 2. `make` mit dem Mockup-Frontend, umgebaut auf das JSON-Modell.
