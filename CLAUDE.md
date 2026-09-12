@@ -47,7 +47,7 @@ Quelltext dieses Repos über seine URL auf und braucht sonst nur sein
 eigenes Datenverzeichnis:
 
 ```bash
-BPLAN=https://raw.githubusercontent.com/svenhornberg/landscape/d9fa1036668a764377b2093bbc26c25382208335/cli.ts
+BPLAN=https://raw.githubusercontent.com/svenhornberg/landscape/8a2583e1be12b38e36df4d65fe18d09cc8492913/cli.ts
 deno run --allow-read --allow-write "$BPLAN" validate .
 ```
 
