@@ -408,6 +408,37 @@ mitDatensatz("zentral muss true oder false sein", (d) => {
     .erwarte('Feld "zentral" ist kein Wahrheitswert (true oder false)');
 });
 
+mitDatensatz("art: technisch wird gelesen und landet im Modell", (d) => {
+  d.schreibe(
+    "data/aufgaben.yaml",
+    AUFGABEN.replace(
+      "- id: rechnung\n  name: Rechnung\n",
+      "- id: rechnung\n  name: Rechnung\n  art: technisch\n",
+    ),
+  );
+  d.pruefe().erwarteCode(0);
+  d.mache("out/plan.html").erwarteCode(0);
+  const html = d.lies("out/plan.html");
+  assert(html.includes('"id":"rechnung","name":"Rechnung","art":"technisch"'), html);
+  assert(html.includes('"id":"angebot","name":"Angebot","art":"fachlich"'), html);
+});
+
+mitDatensatz("F14 Art nicht aus der erlaubten Menge", (d) => {
+  d.schreibe(
+    "data/aufgaben.yaml",
+    AUFGABEN.replace(
+      "- id: rechnung\n  name: Rechnung\n",
+      "- id: rechnung\n  name: Rechnung\n  art: business\n",
+    ),
+  );
+  d.pruefe()
+    .erwarteCode(1)
+    .erwarte("data/aufgaben.yaml:8")
+    .erwarte(
+      'Art "business" von Objekt "rechnung" ist nicht erlaubt (erlaubt: fachlich, technisch)',
+    );
+});
+
 mitDatensatz("F11 ID verletzt das Muster", (d) => {
   d.schreibe(
     "data/organisation.yaml",
@@ -624,7 +655,7 @@ mitDatensatz("Parser fuehrt Dateien mit gleichem Geschaeftsfeld zusammen", (d) =
 Deno.test("demo laeuft sauber durch", () => {
   validate(beispiel("demo"))
     .erwarteCode(0)
-    .erwarte("3 Dateien, 33 Zuordnungen, 0 Fehler, 0 Warnungen");
+    .erwarte("3 Dateien, 38 Zuordnungen, 0 Fehler, 0 Warnungen");
 });
 
 Deno.test("Tippfehler-Beispiel meldet Datei, Zeile und Vorschlag", () => {
@@ -738,7 +769,7 @@ mitOrdner("make laeuft auf dem Demo-Beispiel ohne externe Verweise", (dir) => {
   );
 
   const modell = modellAus(html);
-  assertEquals(modell.zuordnungen.length, 33);
+  assertEquals(modell.zuordnungen.length, 38);
   assertEquals(modell.warnungen.length, 0);
 });
 

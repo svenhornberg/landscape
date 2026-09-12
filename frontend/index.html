@@ -117,6 +117,11 @@ table.l3 th.row .n{white-space:nowrap}
 .node.d1{padding-left:24px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px}
 .node.d2{padding-left:44px;color:var(--ink-2)}.node.d2.sel{color:#fff}
 .node.leer{color:var(--ink-3);font-weight:400;font-family:inherit;font-size:13px;cursor:default}
+/* Technische Capabilities: hinter den fachlichen, mit Gruppenzeile und Zahnrad */
+.tree .gruppe{padding:12px 10px 3px 24px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+table.lvl tr.gruppe th{padding:12px 12px 3px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;text-align:left;border-right:0;background:var(--panel)}
+.art{display:inline-block;margin-right:6px;color:var(--ink-3);font-size:.9em}
+.node.sel .art{color:#fff}
 .hinweis .wege{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .pane{overflow:auto;min-width:0}
 .pane .ph{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
@@ -459,6 +464,18 @@ function badge(befunde) {
   return "";
 }
 
+/// Fachliche Objekte zuerst, technische Capabilities dahinter, je in der
+/// Reihenfolge der Datei. So mischen sich die beiden nicht.
+function objekteSortiert(liste) {
+  return liste.filter(function (o) { return o.art !== "technisch"; })
+    .concat(liste.filter(function (o) { return o.art === "technisch"; }));
+}
+
+function artSymbol(o) {
+  return o.art === "technisch"
+    ? '<span class="art" title="technische Capability">\u2699</span>' : "";
+}
+
 /// Spaltenkopf fuer eine Abteilung; zentrale sagen es im Tooltip.
 function kopfzelle(a) {
   return abteilungZentral(a)
@@ -504,14 +521,21 @@ function ebeneObjekte() {
   if (!sichtbareAbteilungen.length) {
     return '<div class="hinweis">Keine Abteilung arbeitet in diesem Geschäftsfeld.</div>';
   }
-  var objekte = zustand.system ? modell.objekte.filter(objektNutzt) : modell.objekte;
+  var objekte = objekteSortiert(zustand.system ? modell.objekte.filter(objektNutzt) : modell.objekte);
   var html = '<table class="lvl"><thead><tr><th>Objekt</th>';
   sichtbareAbteilungen.forEach(function (a) { html += kopfzelle(a); });
   html += "</tr></thead><tbody>";
 
+  var gruppeGezeigt = false;
   objekte.forEach(function (o) {
+    if (o.art === "technisch" && !gruppeGezeigt) {
+      html += '<tr class="gruppe"><th colspan="' + (sichtbareAbteilungen.length + 1) +
+        '">Technische Capabilities</th></tr>';
+      gruppeGezeigt = true;
+    }
     var befunde = befundeObjekt(o);
-    html += '<tr><th class="row"><button data-objekt="' + esc(o.id) + '">' + esc(o.name) +
+    html += '<tr><th class="row"><button data-objekt="' + esc(o.id) + '">' + artSymbol(o) +
+      esc(o.name) +
       '<span class="n">' + o.aufgaben.length +
       (o.aufgaben.length === 1 ? " Aufgabe" : " Aufgaben") +
       (befunde.redundant ? " · " + befunde.redundant + " redundant" : "") +
@@ -669,9 +693,10 @@ function ebeneAufgabe(objekt, aufgabe) {
 
 function baum() {
   // Mit gewaehltem System zeigt der Baum nur, was damit gemacht wird.
-  var objekte = modell.objekte.filter(function (o) {
+  var objekte = objekteSortiert(modell.objekte.filter(function (o) {
     return !zustand.system || objektNutzt(o);
-  });
+  }));
+  var gruppeGezeigt = false;
   var etwasOffen = objekte.some(function (o) { return zustand.offen[o.id] === true; });
   var html = '<div class="tree"><div class="wurzel' + (zustand.objekt ? "" : " sel") +
     '"><button class="node d0' + (zustand.objekt ? "" : " sel") +
@@ -687,12 +712,16 @@ function baum() {
       esc(systemName()) + "</span>";
   }
   objekte.forEach(function (o) {
+    if (o.art === "technisch" && !gruppeGezeigt) {
+      html += '<div class="gruppe">Technische Capabilities</div>';
+      gruppeGezeigt = true;
+    }
     var aufgeklappt = zustand.offen[o.id] === true;
     // Zugeklappt zeigt das Objekt die Auswahl auch fuer seine gewaehlte Aufgabe.
     html += '<button class="node d1' +
       (zustand.objekt === o.id && (!zustand.aufgabe || !aufgeklappt) ? " sel" : "") +
       '" data-objekt="' + esc(o.id) + '" data-klappen="1"><span class="tri">' +
-      (aufgeklappt ? "▾" : "▸") + "</span>" + esc(o.name) +
+      (aufgeklappt ? "▾" : "▸") + "</span>" + artSymbol(o) + esc(o.name) +
       badge(befundeObjekt(o)) + "</button>";
     if (!aufgeklappt) return;
     o.aufgaben.forEach(function (a) {
@@ -722,7 +751,7 @@ function inhalt() {
   var koerper = aufgabe ? ebeneAufgabe(objekt, aufgabe)
     : objekt ? ebeneObjekt(objekt)
       : ebeneObjekte();
-  return '<div class="pane"><div class="ph"><h2>' + esc(titel) +
+  return '<div class="pane"><div class="ph"><h2>' + (objekt ? artSymbol(objekt) : "") + esc(titel) +
     '</h2><span class="meta">' + meta + "</span></div>" + koerper + "</div>";
 }
 

@@ -153,10 +153,21 @@ steht es abgetrennt hinter den Säulen, in Ebene 3 ist es eine eigene Spalte.
   aufgaben:
     - {id: erstellen, name: erstellen}
     - {id: mahnen, name: mahnen}
+- id: besprechung
+  name: Besprechung
+  art: technisch                    # optional: fachlich (Standard) | technisch
+  aufgaben:
+    - {id: aufzeichnen, name: aufzeichnen}
 ```
 
 Zwei Ebenen, nicht mehr. Objekt und Aufgabe zusammen ergeben die
 Capability, referenziert als `objekt.aufgabe` (z. B. `angebot.erstellen`).
+
+`art: technisch` kennzeichnet technische Capabilities (eine Besprechung
+aufzeichnen, ein Dokument ablegen), damit sie sich nicht mit den fachlichen
+mischen: Im Baum und in Ebene 1 stehen sie hinter den fachlichen unter einer
+Gruppenzeile "Technische Capabilities", mit Zahnrad vor dem Namen. Ein
+anderer Wert als `fachlich` oder `technisch` ist ein Fehler.
 
 ### zuordnungen/<geschaeftsfeld>.md
 
@@ -203,6 +214,7 @@ Fehler (blockieren serve/make):
 - `bearbeitet` oder `geschaeftsfelder` einer Abteilung referenziert
   eine unbekannte ID
 - Status eines Systems nicht aus der erlaubten Menge
+- Art eines Objekts nicht aus der erlaubten Menge (fachlich, technisch)
 
 Warnungen:
 
@@ -226,7 +238,7 @@ ausgeben (Levenshtein-Distanz ≤ 3).
   "geschaeftsfelder": [{"id":"gk","name":"Geschaeftskunden","zentral":false}],
   "abteilungen": [{"id":"vertrieb","name":"Vertrieb","geschaeftsfelder":["pk","gk"],"bearbeitet":["angebot"]}],
   "systeme": [{"id":"crm","name":"CRM","status":"aktiv","verantwortlich":"Vertrieb","seit":2021,"ende":null}],
-  "objekte": [{"id":"angebot","name":"Angebot","aufgaben":[{"id":"erstellen","name":"erstellen"}]}],
+  "objekte": [{"id":"angebot","name":"Angebot","art":"fachlich","aufgaben":[{"id":"erstellen","name":"erstellen"}]}],
   "zuordnungen": [
     {"gf":"gk","abteilung":"vertrieb","objekt":"angebot","aufgabe":"erstellen","system":"crm","anmerkung":"Standardweg seit 2021","quelle":"data/zuordnungen/geschaeftskunden.md:14"}
   ],

@@ -56,6 +56,7 @@ export interface Rohdaten {
   posSysteme: Pos[];
   posSystemeStatus: Pos[];
   posObjekte: Pos[];
+  posObjekteArt: Pos[];
   posAufgaben: Pos[][];
 }
 
@@ -71,6 +72,7 @@ function leereRohdaten(): Rohdaten {
     posSysteme: [],
     posSystemeStatus: [],
     posObjekte: [],
+    posObjekteArt: [],
     posAufgaben: [],
   };
 }
@@ -286,6 +288,7 @@ function baueObjekte(wert: unknown): Objekt[] {
   return alsObjekte(wert).map((e) => ({
     id: pflichtText(e, "id"),
     name: pflichtText(e, "name"),
+    art: textOderNull(e, "art") ?? "fachlich",
     aufgaben: alsObjekte(e.aufgaben).map((a): Aufgabe => ({
       id: pflichtText(a, "id"),
       name: pflichtText(a, "name"),
@@ -362,8 +365,12 @@ function liesAufgaben(wurzel: string, roh: Rohdaten, befunde: Befund[]): void {
   if (!gelesen) return;
 
   const index = new IdZeilen(gelesen.text);
+  const zeilen = gelesen.text.split("\n");
   for (const o of gelesen.wert) {
-    roh.posObjekte.push(pos(AUFGABEN, index.nimm(o.id)));
+    const zeile = index.nimm(o.id);
+    roh.posObjekte.push(pos(AUFGABEN, zeile));
+    const artZeile = schluesselZeile(zeilen, zeile, "art");
+    roh.posObjekteArt.push(pos(AUFGABEN, artZeile > 0 ? artZeile : zeile));
     roh.posAufgaben.push(o.aufgaben.map((a) => pos(AUFGABEN, index.nimm(a.id))));
   }
   roh.objekte = gelesen.wert;

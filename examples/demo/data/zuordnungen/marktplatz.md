@@ -13,3 +13,4 @@ geschaeftsfeld: mp
 | service     | bestellung.pruefen  | ticket |                                  |
 | lager       | bestellung.versenden| erp    |                                  |
 | buchhaltung | rechnung.erstellen  | erp    |                                  |
+| service     | besprechung.aufzeichnen | konferenz |                          |

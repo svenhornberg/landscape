@@ -141,6 +141,11 @@ Ebenen, nicht mehr.
       name: anlegen
     - id: bonitaet
       name: Bonität prüfen
+- id: besprechung
+  name: Besprechung
+  art: technisch                  # optional: fachlich (Standard) | technisch
+  aufgaben:
+    - {id: aufzeichnen, name: aufzeichnen}
 ```
 
 - Objekt und Aufgabe zusammen sind die Capability und werden als
@@ -151,6 +156,11 @@ Ebenen, nicht mehr.
   Substantive. Das ist Konvention, keine Regel.
 - Ein Objekt ohne Aufgaben ist erlaubt und erscheint mit dem Hinweis "hat
   noch keine Aufgaben".
+- `art: technisch` macht ein Objekt zur technischen Capability (Besprechung
+  aufzeichnen, Dokument ablegen). Solche Objekte stehen im Baum und in
+  Ebene 1 hinter den fachlichen unter einer Gruppenzeile, mit Zahnrad vor
+  dem Namen; sonst verhalten sie sich gleich. `art` steht vor `aufgaben`.
+  Ein anderer Wert als `fachlich` oder `technisch` ist ein Fehler (F14).
 
 ## zuordnungen/*.md
 
@@ -242,6 +252,7 @@ Warnungen werden gemeldet und im Plan angezeigt, der Build läuft weiter.
 | F11   | ID verletzt das Muster `[a-z0-9-]+`                                  |
 | F12   | Zuordnungszeile mit leerer Pflichtspalte                             |
 | F13   | Datei fehlt, obwohl andere da sind, oder YAML ist kaputt             |
+| F14   | `art` eines Objekts ist weder fachlich noch technisch                |
 | W1    | Exakt doppelte Zuordnungszeile                                       |
 | W2    | Zuordnung in einem Geschäftsfeld, in dem die Abteilung nicht arbeitet|
 | W3    | Zuordnung für ein Objekt, das nicht in `bearbeitet` steht            |

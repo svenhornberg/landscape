@@ -34,3 +34,8 @@
   verantwortlich: E-Commerce
   status: geplant
   seit: 2027
+- id: konferenz
+  name: Konferenz-Tool
+  verantwortlich: IT Core
+  status: aktiv
+  seit: 2020

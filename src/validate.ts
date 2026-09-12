@@ -18,6 +18,7 @@
 // F11 ID verletzt das Muster [a-z0-9-]+
 // F12 Zuordnungszeile mit leerer Pflichtspalte
 // F13 Datei fehlt oder ist nicht lesbar
+// F14 Art eines Objekts nicht aus der erlaubten Menge (fachlich, technisch)
 //
 // W1  Exakt doppelte Zeile
 // W2  Zuordnung in einem Geschäftsfeld, in dem die Abteilung nicht arbeitet
@@ -28,6 +29,7 @@
 // W7  Abteilung ist für kein Objekt zuständig (`bearbeitet` leer)
 
 import {
+  ART_WERTE,
   idGueltig,
   type Modell,
   type Pos,
@@ -82,6 +84,7 @@ export function pruefe(wurzel: string): Ergebnis {
   pruefeIdMuster(roh, befunde);
   pruefeDoppelteIds(roh, befunde);
   pruefeSysteme(roh, befunde);
+  pruefeObjekte(roh, befunde);
   pruefeAbteilungsreferenzen(roh, befunde);
 
   const zuordnungen = pruefeZuordnungen(roh, befunde);
@@ -192,6 +195,18 @@ function pruefeDoppelteIds(roh: Rohdaten, befunde: Befund[]): void {
       roh.posAufgaben[i] ?? [],
       ` in Objekt "${o.id}"`,
     );
+  });
+}
+
+/** Regel F14. */
+function pruefeObjekte(roh: Rohdaten, befunde: Befund[]): void {
+  const erlaubt = ART_WERTE.join(", ");
+  roh.objekte.forEach((o, i) => {
+    if (ART_WERTE.includes(o.art)) return;
+    befunde.push(fehler(
+      roh.posObjekteArt[i] ?? roh.posObjekte[i] ?? pos("data/aufgaben.yaml"),
+      `Art "${o.art}" von Objekt "${o.id}" ist nicht erlaubt (erlaubt: ${erlaubt})`,
+    ));
   });
 }
 

@@ -54,7 +54,7 @@ function zelle(seite: Page, objekt: string, spalte: number) {
 }
 
 // ---------------------------------------------------------------------------
-// Demo-Datensatz: 5 Objekte, 12 Aufgaben, 33 Zuordnungen, 3 Geschaeftsfelder
+// Demo-Datensatz: 6 Objekte, 14 Aufgaben, 38 Zuordnungen, 3 Geschaeftsfelder
 // ---------------------------------------------------------------------------
 
 const tmp = Deno.makeTempDirSync();
@@ -67,12 +67,12 @@ Deno.test(
     await mitSeite(DEMO, async (seite) => {
       assertEquals(
         await seite.textContent("#zahlen"),
-        "5 Objekte · 12 Aufgaben · 33 Zuordnungen",
+        "6 Objekte · 14 Aufgaben · 38 Zuordnungen",
       );
       assertStringIncludes((await seite.textContent("#stand")) ?? "", "Stand: ");
 
-      // Baum: Wurzel und fuenf Objekte, alle zugeklappt
-      assertEquals(await seite.locator(".tree .node").count(), 6);
+      // Baum: Wurzel und sechs Objekte, alle zugeklappt
+      assertEquals(await seite.locator(".tree .node").count(), 7);
       assertEquals(await seite.locator(".tree .node.d0.sel").count(), 1);
 
       // Bestellung hat drei redundante Zellen: rotes Badge, kein graues
@@ -111,9 +111,9 @@ Deno.test("Ein Knopf klappt alle Objekte auf und zu", OHNE_SANITIZER, async () =
     assertEquals(await knopf.getAttribute("title"), "Alle aufklappen");
     assertEquals(await seite.locator(".tree .node.d2").count(), 0);
 
-    // auf: alle zwoelf Aufgaben, die Auswahl bleibt auf der Wurzel
+    // auf: alle vierzehn Aufgaben, die Auswahl bleibt auf der Wurzel
     await knopf.click();
-    assertEquals(await seite.locator(".tree .node.d2").count(), 12);
+    assertEquals(await seite.locator(".tree .node.d2").count(), 14);
     assertEquals(await knopf.getAttribute("title"), "Alle zuklappen");
     assertEquals(await seite.locator(".tree .node.d0.sel").count(), 1);
 
@@ -392,9 +392,9 @@ Deno.test("ohne eingebettetes Modell wird api/model geholt", OHNE_SANITIZER, asy
     await mitSeite(server.url, async (seite) => {
       assertEquals(
         await seite.textContent("#zahlen"),
-        "5 Objekte · 12 Aufgaben · 33 Zuordnungen",
+        "6 Objekte · 14 Aufgaben · 38 Zuordnungen",
       );
-      assertEquals(await seite.locator(".tree .node").count(), 6);
+      assertEquals(await seite.locator(".tree .node").count(), 7);
     });
   } finally {
     await server.stop();
@@ -522,6 +522,75 @@ Deno.test(
         (await seite.locator("table.l3 .weg .sys").first().getAttribute("title")) ?? "",
         "Quelle: data/zuordnungen/geschaeftskunden.md:11",
       );
+    });
+  },
+);
+
+Deno.test(
+  "Technische Capabilities stehen hinter den fachlichen, mit Zahnrad",
+  OHNE_SANITIZER,
+  async () => {
+    await mitSeite(DEMO, async (seite) => {
+      // Baum: Besprechung zuletzt, davor die Gruppenzeile, am Knoten das Zahnrad
+      assertEquals(
+        await seite.locator(".tree .node.d1").evaluateAll((k) =>
+          k.map((e) => e.dataset.objekt)
+        ),
+        ["angebot", "bestellung", "kunde", "rechnung", "retoure", "besprechung"],
+      );
+      assertEquals(await seite.locator(".tree .gruppe").allTextContents(), [
+        "Technische Capabilities",
+      ]);
+      assertEquals(await seite.locator(".tree .node.d1 .art").count(), 1);
+      assert(
+        await seite.locator('.tree .node[data-objekt="besprechung"] .art').isVisible(),
+      );
+
+      // Ebene 1: Gruppenzeile vor der letzten Zeile, Zahnrad im Zeilenkopf.
+      // Vertrieb und Kundenservice sind zustaendig; der Service protokolliert nirgends.
+      assertEquals(
+        await seite.locator("tbody tr.gruppe th").textContent(),
+        "Technische Capabilities",
+      );
+      assertEquals(
+        await seite.locator("tbody tr").last().locator("th.row button").getAttribute(
+          "data-objekt",
+        ),
+        "besprechung",
+      );
+      assertEquals(await seite.locator("tbody th.row .art").count(), 1);
+      assertEquals(
+        await zelle(seite, "besprechung", 0).locator(".cnt").textContent(),
+        "1",
+      );
+      assertEquals(
+        await zelle(seite, "besprechung", 1).locator(".sub").textContent(),
+        "1 offen",
+      );
+      assertEquals(
+        await seite.locator('tr:has(button[data-objekt="besprechung"]) td.na').count(),
+        3,
+      );
+
+      // Ebene 2: der Titel traegt das Zahnrad
+      await seite.locator('.tree .node[data-objekt="besprechung"]').click();
+      assertEquals(await seite.locator(".pane .ph h2 .art").count(), 1);
+      assertStringIncludes(
+        (await seite.textContent(".pane .ph h2")) ?? "",
+        "Besprechung",
+      );
+
+      // Systemfilter: ohne technischen Treffer verschwindet auch die Gruppe
+      await seite.selectOption("#systemwahl", "crm");
+      assertEquals(await seite.locator(".tree .gruppe").count(), 0);
+      await seite.selectOption("#systemwahl", "konferenz");
+      assertEquals(
+        await seite.locator(".tree .node.d1").evaluateAll((k) =>
+          k.map((e) => e.dataset.objekt)
+        ),
+        ["besprechung"],
+      );
+      assertEquals(await seite.locator(".tree .gruppe").count(), 1);
     });
   },
 );
@@ -800,7 +869,7 @@ Deno.test(
       assert(await seite.locator("#systemweg").isHidden());
       assertEquals(await seite.inputValue("#systemwahl"), "");
       assertEquals(await seite.locator(".mark, .dim").count(), 0);
-      assertEquals(await seite.locator(".tree .node.d1").count(), 5);
+      assertEquals(await seite.locator(".tree .node.d1").count(), 6);
       assertEquals(
         await seite.evaluate("location.hash"),
         "#objekt=angebot&aufgabe=erstellen",

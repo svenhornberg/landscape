@@ -7,6 +7,9 @@
 /** Erlaubte Werte für `status` in `systeme.yaml`. */
 export const STATUS_WERTE = ["aktiv", "auslaufend", "geplant"];
 
+/** Erlaubte Werte für `art` eines Objekts; `fachlich` ist der Standard. */
+export const ART_WERTE = ["fachlich", "technisch"];
+
 /** Erlaubtes Muster für alle IDs: `[a-z0-9-]+`. */
 export function idGueltig(id: string): boolean {
   return /^[a-z0-9-]+$/.test(id);
@@ -64,6 +67,13 @@ export interface Aufgabe {
 export interface Objekt {
   id: string;
   name: string;
+  /**
+   * `fachlich` (Standard) oder `technisch`. Technische Capabilities wie das
+   * Aufzeichnen einer Besprechung stehen im Plan hinter den fachlichen, mit
+   * Zahnrad. Wie `status` bewusst als freier String gelesen, damit ein
+   * unerlaubter Wert eine Meldung mit Zeile wird.
+   */
+  art: string;
   aufgaben: Aufgabe[];
 }
 

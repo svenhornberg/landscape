@@ -25,3 +25,10 @@
   aufgaben:
     - {id: erfassen, name: erfassen}
     - {id: erstatten, name: erstatten}
+# Technische Capabilities stehen mit `art: technisch` hinter den fachlichen.
+- id: besprechung
+  name: Besprechung
+  art: technisch
+  aufgaben:
+    - {id: aufzeichnen, name: aufzeichnen}
+    - {id: protokollieren, name: protokollieren}

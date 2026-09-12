@@ -10,11 +10,11 @@ abteilungen:
   - id: vertrieb
     name: Vertrieb
     geschaeftsfelder: [gk]
-    bearbeitet: [angebot, bestellung, kunde]
+    bearbeitet: [angebot, bestellung, kunde, besprechung]
   - id: service
     name: Kundenservice
     geschaeftsfelder: [pk, gk, mp]
-    bearbeitet: [bestellung, kunde, retoure]
+    bearbeitet: [bestellung, kunde, retoure, besprechung]
   - id: lager
     name: Lager und Versand
     geschaeftsfelder: [pk, gk, mp]

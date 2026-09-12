@@ -17,3 +17,4 @@ Kein CRM-Rollout, der Shop ist hier der fuehrende Weg.
 | lager       | retoure.erstatten   | erp    |                        |
 | buchhaltung | rechnung.erstellen  | erp    |                        |
 | buchhaltung | rechnung.mahnen     | mahn   |                        |
+| service     | besprechung.aufzeichnen | konferenz |                |

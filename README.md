@@ -115,6 +115,10 @@ Die Oberfläche ist ein Explorer. Links ein Baum aus Objekten und Aufgaben
 3. **Aufgabe** – Abteilung × Geschäftsfeld, die Zelle zeigt die Systeme mit
    Anmerkung daneben; die Fundstelle in den Daten steht im Tooltip des Chips.
 
+Objekte mit `art: technisch` sind technische Capabilities, etwa eine
+Besprechung aufzeichnen. Sie stehen hinter den fachlichen unter einer eigenen
+Gruppenzeile, mit Zahnrad, damit sich beides nicht mischt.
+
 Ein Geschäftsfeld mit `zentral: true` ist eine Zentralfunktion: Ihre
 Abteilungen gibt es einmal für alle, ihre Wege zählen in jedem Filter mit,
 und als eigener Chip gewählt zeigt der Plan nur sie.

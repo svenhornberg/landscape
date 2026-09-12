@@ -25,3 +25,6 @@ Stand der Interviews: September 2026.
 | buchhaltung | rechnung.mahnen     | mahn   |                                    |
 | buchhaltung | rechnung.mahnen     | excel  | manuelle Liste fuer Sonderfaelle   |
 | buchhaltung | kunde.bonitaet      | erp    |                                    |
+| vertrieb    | besprechung.aufzeichnen | konferenz |                                 |
+| vertrieb    | besprechung.protokollieren | excel  | Gespraechsnotiz in der Kundenliste |
+| service     | besprechung.aufzeichnen | konferenz |                                 |

@@ -30,8 +30,10 @@ Alle Beispiele verwenden durchgängig einen erfundenen Versandhandel:
 - Geschäftsfelder: `pk` Privatkunden, `gk` Geschäftskunden, `mp` Marktplatz,
   dazu `zentral` Zentralfunktion (`zentral: true`)
 - Abteilungen: `vertrieb`, `service`, `lager`, `buchhaltung`, `marktplatz`
-- Systeme: `erp`, `shop`, `crm`, `excel`, `ticket`, `mahn`, `oms`
-- Objekte: `angebot`, `bestellung`, `kunde`, `rechnung`, `retoure`
+- Systeme: `erp`, `shop`, `crm`, `excel`, `ticket`, `mahn`, `oms`,
+  `konferenz` Konferenz-Tool
+- Objekte: `angebot`, `bestellung`, `kunde`, `rechnung`, `retoure`, dazu
+  `besprechung` als technische Capability (`art: technisch`)
 
 Wer ein neues Beispiel braucht, bleibt in diesem Vokabular.
 
@@ -122,7 +124,7 @@ Dasselbe gilt im privaten Datenrepo, schon aus Gewohnheit.
   über eine Import-Map. Beim Aufruf über eine URL gilt die Import-Map
   dieses Repos nicht, ein blosser Name waere dort nicht auflösbar. Die
   Lint-Regel `no-import-prefix` ist deshalb in `deno.json` abgeschaltet.
-- Jede Validierungsregel trägt eine Nummer (F1 bis F13, W1 bis W7). Die
+- Jede Validierungsregel trägt eine Nummer (F1 bis F14, W1 bis W7). Die
   Liste steht im Kopf von `src/validate.ts`. Eine neue Regel bekommt eine
   Nummer, einen Eintrag dort und einen Testfall in `tests/regeln_test.ts`.
 - Getestet wird über die aufgerufene CLI, damit die Ausgabe mit
