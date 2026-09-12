@@ -58,14 +58,16 @@ select.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .legend .sw{display:inline-block;width:14px;height:14px;border:1px solid var(--line-2);vertical-align:-2px;margin-right:6px}
 .legend .sw.n0{background-image:repeating-linear-gradient(135deg,transparent 0 3px,#c9d2d8 3px 4px)}
 
-/* Ausgewaehltes System: Treffer umrandet, der Rest tritt zurueck */
-.mark{box-shadow:inset 0 0 0 3px var(--ink)}
+/* Ausgewaehltes System: Zellen mit Treffer umrandet, der Rest tritt zurueck.
+   In Ebene 3 markiert nur der Chip; Kasten und Zeile bleiben, wie sie sind. */
+td.c.mark{box-shadow:inset 0 0 0 3px var(--ink)}
 .dim{opacity:.35}
 .sys.mark{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink);font-weight:600;opacity:1}
 .sys.dim{opacity:.4}
-.way.mark{box-shadow:none;border-left:3px solid var(--ink);padding-left:8px}
-.dbox.dim{opacity:.4}
-.legend .sw.mark{background:var(--panel)}
+.dim .sys.dim{opacity:1}
+.way.dim{opacity:.55}
+.dbox.dim{opacity:.45}
+.legend .sw.mark{box-shadow:inset 0 0 0 3px var(--ink);background:var(--panel)}
 
 /* Ebene 1 und 2: Tabellen */
 table.lvl{border-collapse:separate;border-spacing:0;width:auto}
@@ -569,7 +571,7 @@ function ebeneAufgabe(objekt, aufgabe) {
     var liste = wege(a.id, objekt.id, aufgabe.id);
     var anzahl = systeme(a.id, objekt.id, aufgabe.id).length;
     var kastenTrifft = !zustand.system || nutztSystem(a.id, objekt.id, aufgabe.id);
-    html += '<div class="dbox ' + hitze(anzahl) + hervor(kastenTrifft) +
+    html += '<div class="dbox ' + hitze(anzahl) + (kastenTrifft ? "" : " dim") +
       '"><h3><span class="n">' + esc(a.name) +
       '</span><span class="v">' + wortWege(anzahl) + "</span></h3>";
     if (!liste.length) {
@@ -577,9 +579,10 @@ function ebeneAufgabe(objekt, aufgabe) {
     }
     liste.forEach(function (z) {
       var gf = nachGf[z.gf];
-      // Im zurueckgenommenen Kasten nicht noch einmal zuruecknehmen.
-      var zeileHervor = kastenTrifft ? hervor(z.system === zustand.system) : "";
-      html += '<div class="way' + zeileHervor + '">' + chip(z.system) +
+      // Zeilen ohne das System treten zurueck; im zurueckgenommenen Kasten
+      // nicht noch einmal. Den Treffer markiert der Chip selbst.
+      var zeileZurueck = kastenTrifft && zustand.system && z.system !== zustand.system;
+      html += '<div class="way' + (zeileZurueck ? " dim" : "") + '">' + chip(z.system) +
         '<span class="bem">' + esc(z.anmerkung) + "</span>" +
         '<span class="wo"><span class="gf">' + esc(gf ? gf.name : z.gf) + "</span>" +
         '<span class="quelle">' + esc(z.quelle) + "</span></span></div>";

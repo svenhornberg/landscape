@@ -559,8 +559,9 @@ Deno.test(
 
       // Ebene 3: eine Zeile markiert, eine zurueckgenommen
       await seite.locator('.tree .node.d2[data-aufgabe="erstellen"]').click();
-      assertEquals(await seite.locator(".way.mark").count(), 1);
       assertEquals(await seite.locator(".way.dim").count(), 1);
+      assertEquals(await seite.locator(".way:not(.dim) .sys.mark").count(), 1);
+      assertEquals(await seite.locator(".dbox.mark, .way.mark").count(), 0);
 
       // Abwahl: alles wieder da, der Rest der Adresse bleibt
       await seite.locator("#systemweg").click();
