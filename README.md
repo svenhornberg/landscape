@@ -15,10 +15,30 @@ Die vollständige Spezifikation steht in [SPEC.md](SPEC.md).
 | `bplan make`     | fertig                                        |
 | `bplan serve`    | Platzhalter, Schritt 3                        |
 
-## Ausprobieren
+## Installieren
 
 Rust wird einmalig gebraucht, über [rustup.rs](https://rustup.rs) (unter
 Windows der Installer, unter macOS und Linux der Einzeiler auf der Seite).
+Danach genügt ein Befehl, ohne dieses Repo zu klonen:
+
+```bash
+cargo install --git https://github.com/svenhornberg/landscape bplan
+```
+
+Das dauert etwa zwanzig Sekunden und legt `bplan` in den Pfad. Ab da
+reicht das Verzeichnis mit den eigenen Daten:
+
+```bash
+cd mein-datenrepo
+bplan validate
+bplan make -o bebauungsplan.html
+```
+
+Auf einen neueren Stand bringt man es mit demselben Befehl plus
+`--force`. Fertige Binaries gibt es bewusst nicht, weder als Release noch
+im Repo; gebaut wird aus dem Quelltext, lokal wie in der CI.
+
+## Am Repo arbeiten
 
 ```bash
 git clone https://github.com/svenhornberg/landscape.git
@@ -28,13 +48,6 @@ cargo run -- validate examples/demo        # läuft sauber durch
 cargo run -- validate examples/tippfehler  # meldet Tippfehler mit Zeile und Vorschlag
 cargo run -- make examples/demo            # schreibt bebauungsplan.html
 cargo test                                 # ein Testfall je Regel aus SPEC.md
-```
-
-Ein Binary ohne Cargo im Pfad:
-
-```bash
-cargo build --release
-./target/release/bplan validate examples/demo
 ```
 
 So sieht die Ausgabe bei Tippfehlern aus:
