@@ -249,9 +249,12 @@ Die drei Ebenen:
    Klick auf Zeile oder Zelle → Ebene 2.
 2. **Objekt**: Tabelle Aufgabe × zuständige Abteilungen. Zelle zeigt die
    System-Chips. Klick → Ebene 3.
-3. **Aufgabe**: je zuständiger Abteilung ein Kasten mit allen Wegen
-   (System, Anmerkung, Geschäftsfeld, Quelle). Leerer Kasten = White
-   Spot, mit Text "keine Zuordnung erfasst, obwohl zuständig".
+3. **Aufgabe**: Tabelle Abteilung × Geschäftsfeld, nur die zuständigen
+   Abteilungen und die Geschäftsfelder, in denen eine davon arbeitet.
+   Zelle zeigt die System-Chips mit Anmerkung daneben, die Quelle
+   (Datei:Zeile) im Tooltip des Chips. Leere Zelle = White Spot, "offen".
+   Die Zeile bilanziert über alle Spalten wie die Kennzahlen: "1 System",
+   "2 Systeme · redundant" oder "offen".
 
 Farbcode überall gleich: 1 System grün, 2 gelb, 3+ rot, White Spot
 schraffiert. System-Chips: aktiv voll, auslaufend gestrichelt, geplant

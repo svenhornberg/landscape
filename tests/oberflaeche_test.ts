@@ -128,20 +128,33 @@ Deno.test(
       assert(await erstellen.evaluate((e) => e.classList.contains("n2")));
       assertEquals(await erstellen.locator(".sys").allTextContents(), ["CRM", "Excel"]);
 
-      // Ebene 3 ueber den Baum
+      // Ebene 3 ueber den Baum: Tabelle Abteilung x Geschaeftsfeld, als Spalten
+      // nur die Geschaeftsfelder, in denen eine zustaendige Abteilung arbeitet
       await seite.locator('.tree .node.d2[data-aufgabe="erstellen"]').click();
       assertEquals(await seite.textContent(".pane .ph h2"), "Angebot erstellen");
-      assertEquals(await seite.locator(".dbox").count(), 1);
-      assertEquals(await seite.locator(".dbox .way").count(), 2);
-      assertStringIncludes((await seite.textContent(".dbox h3 .v")) ?? "", "2 Wege");
-      assertEquals(await seite.locator(".way .quelle").allTextContents(), [
-        "data/zuordnungen/geschaeftskunden.md:11",
-        "data/zuordnungen/geschaeftskunden.md:12",
-      ]);
-      assertEquals(
-        await seite.locator(".way .gf").first().textContent(),
+      assertEquals(await seite.locator("table.l3 thead th").allTextContents(), [
+        "Abteilung",
         "Geschaeftskunden",
+      ]);
+      assertEquals(await seite.locator("table.l3 tbody tr").count(), 1);
+      assertEquals(
+        await seite.textContent("table.l3 th.row .n"),
+        "2 Systeme · redundant",
       );
+      const zelle3 = seite.locator("table.l3 td.c");
+      assert(await zelle3.evaluate((e) => e.classList.contains("n2")));
+      assertEquals(await zelle3.locator(".weg .sys").allTextContents(), ["CRM", "Excel"]);
+      assertEquals(await zelle3.locator(".weg .bem").allTextContents(), [
+        "Standardweg seit 2021",
+        "Sonderkalkulation bei Rahmenpreisen",
+      ]);
+      // die Fundstelle haengt am Chip, nicht mehr als Text in der Zelle
+      const titel = await zelle3.locator(".weg .sys").evaluateAll((k) =>
+        k.map((e) => e.title)
+      );
+      assertStringIncludes(titel[0], "Quelle: data/zuordnungen/geschaeftskunden.md:11");
+      assertStringIncludes(titel[1], "Quelle: data/zuordnungen/geschaeftskunden.md:12");
+      assertEquals(await seite.locator("table.l3 .quelle").count(), 0);
 
       // Zurueck zur Wurzel
       await seite.locator('.tree .node[data-ziel="wurzel"]').click();
@@ -208,22 +221,43 @@ Deno.test(
         3,
       );
 
-      // Ebene 3 fuer Kunde / Bonitaet pruefen: zwei leere Kaesten
+      // Ebene 3 fuer Kunde / Bonitaet pruefen: zwei Abteilungen, eine Spalte,
+      // beide Zellen offen, beide Zeilen offen
       await seite.locator('.tree .node[data-objekt="kunde"]').click();
       await seite.locator('.tree .node.d2[data-aufgabe="bonitaet"]').click();
-      assertEquals(await seite.locator(".dbox").count(), 2);
-      assertEquals(await seite.locator(".dbox.n0").count(), 2);
-      assertEquals(await seite.locator(".dbox .empty").allTextContents(), [
-        "Keine Zuordnung erfasst, obwohl zuständig.",
-        "Keine Zuordnung erfasst, obwohl zuständig.",
+      assertEquals(await seite.locator("table.l3 thead th").allTextContents(), [
+        "Abteilung",
+        "Privatkunden",
       ]);
+      assertEquals(await seite.locator("table.l3 tbody tr").count(), 2);
+      assertEquals(await seite.locator("table.l3 td.c.n0").count(), 2);
+      assertEquals(await seite.locator("table.l3 td.c.n0 .sub").allTextContents(), [
+        "offen",
+        "offen",
+      ]);
+      assertEquals(await seite.locator("table.l3 th.row .n").allTextContents(), [
+        "offen",
+        "offen",
+      ]);
+      assertStringIncludes(
+        (await seite.locator("table.l3 td.c.n0").first().getAttribute("title")) ?? "",
+        "Kundenservice · Privatkunden: zuständig, aber kein Weg erfasst (offen)",
+      );
 
-      // Zurueck auf Alle: jetzt ist auch der Vertrieb zustaendig. Nur die
-      // Buchhaltung hat einen Weg fuer Bonitaet, die anderen zwei sind offen.
+      // Zurueck auf Alle: jetzt ist auch der Vertrieb zustaendig, und alle drei
+      // Geschaeftsfelder sind Spalten. Nur die Buchhaltung hat einen Weg, bei
+      // Geschaeftskunden; der Rest ist offen oder nicht zustaendig (Vertrieb
+      // arbeitet nur bei Geschaeftskunden).
       await seite.locator("#gfleiste .chip", { hasText: "Alle" }).click();
-      assertEquals(await seite.locator(".dbox").count(), 3);
-      assertEquals(await seite.locator(".dbox.n0").count(), 2);
-      assertEquals(await seite.locator(".dbox.n1").count(), 1);
+      assertEquals(await seite.locator("table.l3 thead th").count(), 4);
+      assertEquals(await seite.locator("table.l3 th.row .n").allTextContents(), [
+        "offen",
+        "offen",
+        "1 System",
+      ]);
+      assertEquals(await seite.locator("table.l3 td.c.n0").count(), 6);
+      assertEquals(await seite.locator("table.l3 td.c.n1").count(), 1);
+      assertEquals(await seite.locator("table.l3 td.na").count(), 2);
     });
   },
 );
@@ -265,7 +299,7 @@ Deno.test(
 
       assertEquals(await seite.locator("img").count(), 0);
       assertEquals(await seite.locator("script").count(), 2);
-      const wege = await seite.locator(".way").allTextContents();
+      const wege = await seite.locator(".weg").allTextContents();
       assert(
         wege.some((w) => w.includes('Text mit </script><img src=x> & "Zeichen"')),
         wege.join("\n"),
@@ -438,13 +472,23 @@ Deno.test(
         "White Spot, zuständig, aber kein Weg",
       );
 
-      // Ebene 3: der Kasten sagt "redundant" dazu, jede Zeile hat Geschaeftsfeld und Fundstelle
+      // Ebene 3: die Zeile sagt "redundant" dazu, die Zelle nennt es im Tooltip
+      // samt Abteilung und Geschaeftsfeld, die Fundstelle haengt am Chip
       await seite.locator("#gfleiste .chip", { hasText: "Alle" }).click();
       await seite.locator('.tree .node[data-objekt="angebot"]').click();
       await seite.locator('.tree .node.d2[data-aufgabe="erstellen"]').click();
-      assertEquals(await seite.textContent(".dbox h3 .v"), "2 Wege · redundant");
-      assertEquals(await seite.locator(".way .wo .gf").count(), 2);
-      assertEquals(await seite.locator(".way .wo .quelle").count(), 2);
+      assertEquals(
+        await seite.textContent("table.l3 th.row .n"),
+        "2 Systeme · redundant",
+      );
+      assertEquals(
+        await seite.locator("table.l3 td.c").getAttribute("title"),
+        "Vertrieb · Geschaeftskunden: 2 Systeme, redundant",
+      );
+      assertStringIncludes(
+        (await seite.locator("table.l3 .weg .sys").first().getAttribute("title")) ?? "",
+        "Quelle: data/zuordnungen/geschaeftskunden.md:11",
+      );
     });
   },
 );
@@ -463,7 +507,7 @@ Deno.test(
         await seite.locator("#gfleiste .chip.on").textContent(),
         "Privatkunden",
       );
-      assertEquals(await seite.locator(".dbox.n0").count(), 2);
+      assertEquals(await seite.locator("table.l3 td.c.n0").count(), 2);
       assertEquals(await seite.locator(".tree .node.d2.sel").count(), 1);
 
       // Klicks schreiben die Adresse fort, ohne die Seite neu zu laden
@@ -547,6 +591,17 @@ Deno.test(
         ["anlegen"],
       );
 
+      // Ebene 3 fuer Kunde anlegen: zwei CRM-Chips markiert; die Zellen ohne
+      // CRM und die grauen treten zurueck (7 von 9), keine Zelle ist umrandet
+      await seite.locator('.tree .node.d2[data-aufgabe="anlegen"]').click();
+      assertEquals(await seite.locator("table.l3 .sys.mark").allTextContents(), [
+        "CRM",
+        "CRM",
+      ]);
+      assertEquals(await seite.locator("table.l3 td.c:not(.dim)").count(), 2);
+      assertEquals(await seite.locator("table.l3 td.c.dim").count(), 7);
+      assertEquals(await seite.locator("table.l3 td.c.mark").count(), 0);
+
       // Ebene 2 fuer Angebot: alle drei Aufgaben, CRM-Chips markiert, Excel zurueck
       await seite.locator('.tree .node[data-objekt="angebot"]').click();
       assertEquals(await seite.locator("tbody tr").count(), 3);
@@ -557,11 +612,15 @@ Deno.test(
       ]);
       assertEquals(await seite.locator("table .sys.dim").allTextContents(), ["Excel"]);
 
-      // Ebene 3: eine Zeile markiert, eine zurueckgenommen
+      // Ebene 3: der CRM-Chip markiert, Excel zurueck; die einzige Zelle hat
+      // den Treffer und bleibt, wie sie ist
       await seite.locator('.tree .node.d2[data-aufgabe="erstellen"]').click();
-      assertEquals(await seite.locator(".way.dim").count(), 1);
-      assertEquals(await seite.locator(".way:not(.dim) .sys.mark").count(), 1);
-      assertEquals(await seite.locator(".dbox.mark, .way.mark").count(), 0);
+      assertEquals(await seite.locator("table.l3 .sys.mark").allTextContents(), ["CRM"]);
+      assertEquals(await seite.locator("table.l3 .sys.dim").allTextContents(), ["Excel"]);
+      assertEquals(
+        await seite.locator("table.l3 td.c.mark, table.l3 td.c.dim").count(),
+        0,
+      );
 
       // Abwahl: alles wieder da, der Rest der Adresse bleibt
       await seite.locator("#systemweg").click();

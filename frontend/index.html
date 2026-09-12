@@ -58,14 +58,12 @@ select.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .legend .sw.n0{background-image:repeating-linear-gradient(135deg,transparent 0 3px,#c9d2d8 3px 4px)}
 
 /* Ausgewaehltes System: Zellen mit Treffer umrandet, der Rest tritt zurueck.
-   In Ebene 3 markiert nur der Chip; Kasten und Zeile bleiben, wie sie sind. */
+   In Ebene 3 markiert nur der Chip, die Zelle ohne Treffer tritt zurueck. */
 td.c.mark{box-shadow:inset 0 0 0 3px var(--ink)}
 .dim{opacity:.35}
 .sys.mark{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink);font-weight:600;opacity:1}
 .sys.dim{opacity:.4}
 .dim .sys.dim{opacity:1}
-.way.dim{opacity:.55}
-.dbox.dim{opacity:.45}
 .legend .sw.mark{box-shadow:inset 0 0 0 3px var(--ink);background:var(--panel)}
 
 /* Ebene 1 und 2: Tabellen */
@@ -73,7 +71,7 @@ table.lvl{border-collapse:separate;border-spacing:0;width:auto}
 table.lvl th,table.lvl td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:middle}
 table.lvl thead th{padding:8px 10px;text-align:left;font-weight:500;color:var(--ink-2);border-bottom:2px solid var(--ink);white-space:nowrap;background:var(--panel);position:sticky;top:0}
 table.lvl th.row{text-align:left;min-width:240px;background:var(--panel)}
-table.lvl th.row button{width:100%;padding:10px 12px;display:flex;align-items:baseline;gap:10px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-size:15px;font-weight:600}
+table.lvl th.row button,table.lvl th.row .abt{width:100%;padding:10px 12px;display:flex;align-items:baseline;gap:10px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-size:15px;font-weight:600}
 table.lvl th.row button:hover{background:var(--bg)}
 table.lvl th.row .n{color:var(--ink-3);font-weight:400;font-size:12px;font-family:"IBM Plex Sans",system-ui,sans-serif}
 table.lvl th.row .go{margin-left:auto;color:var(--ink-3);font-weight:400}
@@ -86,20 +84,15 @@ table.lvl td.na{background:var(--bg)}
 table.lvl td.c.click{cursor:pointer}table.lvl td.c.click:hover{box-shadow:inset 0 0 0 2px var(--ink)}
 table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justify-content:center;max-width:240px}
 
-/* Ebene 3: je zustaendiger Abteilung ein Kasten mit allen Wegen */
-.l3{display:flex;flex-wrap:wrap;gap:12px;padding:16px}
-.dbox{flex:0 0 320px;max-width:100%;border:1px solid var(--line-2);border-radius:6px;padding:10px 12px}
-.dbox h3{font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.dbox h3 .n{flex:1;min-width:0}
-.dbox h3 .v{font-size:13px;font-weight:500;white-space:nowrap;flex:none}
-.dbox.n1 h3 .v{color:var(--h1-ink)}.dbox.n2 h3 .v{color:var(--h2-ink)}.dbox.n3 h3 .v{color:var(--h3-ink)}
-.dbox.n0 h3 .v{color:var(--ink-3);font-weight:400}
-.dbox .way{padding:7px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:baseline}
-.dbox .way .bem{min-width:0}
-.dbox .way .wo{grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
-.dbox .way .gf{white-space:nowrap}
-.dbox .way .quelle{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}
-.dbox .empty{color:var(--ink-3);padding:8px 0}
+/* Ebene 3: Tabelle Abteilung x Geschaeftsfeld. In der Zelle die Systeme
+   untereinander, die Anmerkung daneben; linksbuendig, weil hier Text steht. */
+table.l3 td.c{text-align:left;min-width:170px;vertical-align:top;padding:8px 10px}
+table.l3 td.c .chips{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:5px;padding:0;max-width:420px}
+table.l3 td.c .sub{display:inline;margin:0 0 0 6px}
+table.l3 th.row .abt{flex-direction:column;align-items:flex-start;gap:0}
+table.l3 th.row .n{white-space:nowrap}
+.weg{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}
+.weg .bem{font-size:12px;color:var(--ink-2)}
 
 /* Variante B: Explorer, Baum links, Inhalt rechts */
 .explorer{display:grid;grid-template-columns:280px 1fr;min-height:360px}
@@ -414,14 +407,16 @@ function filterVorbereiten() {
 // Bausteine
 // ---------------------------------------------------------------------------
 
-/// System-Chip: aktiv voll, auslaufend gestrichelt, geplant gepunktet.
-function chip(systemId) {
+/// System-Chip: aktiv voll, auslaufend gestrichelt, geplant gepunktet. Mit
+/// einer Zuordnungszeile dazu nennt der Tooltip auch deren Fundstelle.
+function chip(systemId, zeile) {
   var s = nachSystem[systemId] || {name: systemId, status: "aktiv"};
   var status = s.status || "aktiv";
   var titel = [s.name, status +
     (s.seit ? " seit " + s.seit : "") + (s.ende ? ", Ende " + s.ende : "")];
   if (s.verantwortlich) titel.push("verantwortlich: " + s.verantwortlich);
   if (s.notiz) titel.push(s.notiz);
+  if (zeile) titel.push("Quelle: " + zeile.quelle);
   return '<span class="sys ' + esc(status) + hervor(systemId === zustand.system) +
     '" title="' + esc(titel.join(" · ")) + '">' +
     esc(s.name) +
@@ -442,8 +437,9 @@ function badge(befunde) {
   return "";
 }
 
+/// Bilanz einer Zeile in Ebene 3, in den Worten der Legende.
 function wortWege(anzahl) {
-  return anzahl === 0 ? "White Spot" : anzahl === 1 ? "1 Weg" : anzahl + " Wege · redundant";
+  return anzahl === 0 ? "offen" : anzahl === 1 ? "1 System" : anzahl + " Systeme · redundant";
 }
 
 function legende() {
@@ -567,7 +563,8 @@ function ebeneObjekt(objekt) {
         '" data-objekt="' + esc(objekt.id) + '" data-aufgabe="' + esc(auf.id) +
         '" title="' + esc(titel) + '">' +
         (liste.length
-          ? '<div class="chips">' + liste.map(chip).join("") + "</div>"
+          ? '<div class="chips">' + liste.map(function (id) { return chip(id); }).join("") +
+            "</div>"
           : '<span class="cnt">–</span><span class="sub">offen</span>') +
         "</td>";
     });
@@ -576,8 +573,12 @@ function ebeneObjekt(objekt) {
   return html + "</tbody></table>";
 }
 
-/// Ebene 3: je zustaendiger Abteilung ein Kasten mit allen Wegen. Leerer
-/// Kasten = White Spot.
+/// Ebene 3: Tabelle Abteilung x Geschaeftsfeld. Die Zelle zeigt die Systeme,
+/// mit denen die Abteilung die Aufgabe in diesem Geschaeftsfeld erledigt, die
+/// Anmerkung daneben, die Fundstelle im Tooltip des Chips. Spalten sind nur
+/// die Geschaeftsfelder, in denen eine zustaendige Abteilung arbeitet; leere
+/// Zelle = White Spot. Die Zeile bilanziert ueber alle Spalten, wie die
+/// Kennzahlen: verschiedene Systeme ueber die gefilterten Geschaeftsfelder.
 function ebeneAufgabe(objekt, aufgabe) {
   if (systemOhneTreffer()) return leereSystemansicht();
   var abteilungen = zustaendigFuer[objekt.id] || [];
@@ -585,30 +586,49 @@ function ebeneAufgabe(objekt, aufgabe) {
     return '<div class="hinweis">Im aktuellen Filter ist keine Abteilung für ' +
       esc(objekt.name) + " zuständig.</div>";
   }
-  var html = '<div class="l3">';
-  abteilungen.forEach(function (a) {
-    var liste = wege(a.id, objekt.id, aufgabe.id);
-    var anzahl = systeme(a.id, objekt.id, aufgabe.id).length;
-    var kastenTrifft = !zustand.system || nutztSystem(a.id, objekt.id, aufgabe.id);
-    html += '<div class="dbox ' + hitze(anzahl) + (kastenTrifft ? "" : " dim") +
-      '"><h3><span class="n">' + esc(a.name) +
-      '</span><span class="v">' + wortWege(anzahl) + "</span></h3>";
-    if (!liste.length) {
-      html += '<div class="empty">Keine Zuordnung erfasst, obwohl zuständig.</div>';
-    }
-    liste.forEach(function (z) {
-      var gf = nachGf[z.gf];
-      // Zeilen ohne das System treten zurueck; im zurueckgenommenen Kasten
-      // nicht noch einmal. Den Treffer markiert der Chip selbst.
-      var zeileZurueck = kastenTrifft && zustand.system && z.system !== zustand.system;
-      html += '<div class="way' + (zeileZurueck ? " dim" : "") + '">' + chip(z.system) +
-        '<span class="bem">' + esc(z.anmerkung) + "</span>" +
-        '<span class="wo"><span class="gf">' + esc(gf ? gf.name : z.gf) + "</span>" +
-        '<span class="quelle">' + esc(z.quelle) + "</span></span></div>";
+  var felder = modell.geschaeftsfelder.filter(function (g) {
+    return gfFilter[g.id] === true && abteilungen.some(function (a) {
+      return a.geschaeftsfelder.indexOf(g.id) >= 0;
     });
-    html += "</div>";
   });
-  return html + "</div>";
+  var html = '<table class="lvl l3"><thead><tr><th>Abteilung</th>';
+  felder.forEach(function (g) { html += "<th>" + esc(g.name) + "</th>"; });
+  html += "</tr></thead><tbody>";
+
+  abteilungen.forEach(function (a) {
+    var alle = wege(a.id, objekt.id, aufgabe.id);
+    html += '<tr><th class="row"><span class="abt">' + esc(a.name) + '<span class="n">' +
+      wortWege(systeme(a.id, objekt.id, aufgabe.id).length) + "</span></span></th>";
+    felder.forEach(function (g) {
+      if (a.geschaeftsfelder.indexOf(g.id) < 0) {
+        html += '<td class="c na' + hervor(false) + '" title="' +
+          esc(a.name + " arbeitet nicht im Geschäftsfeld " + g.name) + '"></td>';
+        return;
+      }
+      var zeilen = alle.filter(function (z) { return z.gf === g.id; });
+      var verschieden = {};
+      zeilen.forEach(function (z) { verschieden[z.system] = true; });
+      var anzahl = Object.keys(verschieden).length;
+      var trifft = zeilen.some(function (z) { return z.system === zustand.system; });
+      var titel = a.name + " · " + g.name + ": " +
+        (anzahl === 0 ? "zuständig, aber kein Weg erfasst (offen)"
+          : anzahl === 1 ? "1 System" : anzahl + " Systeme, redundant");
+      // Mit gewaehltem System tritt die Zelle ohne Treffer zurueck; den
+      // Treffer markiert der Chip selbst, nicht die Zelle.
+      html += '<td class="c ' + hitze(anzahl) + (zustand.system && !trifft ? " dim" : "") +
+        '" title="' + esc(titel) + '">' +
+        (zeilen.length
+          ? '<div class="chips">' + zeilen.map(function (z) {
+            return '<span class="weg">' + chip(z.system, z) +
+              (z.anmerkung ? '<span class="bem">' + esc(z.anmerkung) + "</span>" : "") +
+              "</span>";
+          }).join("") + "</div>"
+          : '<span class="cnt">–</span><span class="sub">offen</span>') +
+        "</td>";
+    });
+    html += "</tr>";
+  });
+  return html + "</tbody></table>";
 }
 
 // ---------------------------------------------------------------------------
@@ -653,7 +673,7 @@ function inhalt() {
     })[0] || null;
   }
   var titel = objekt ? (aufgabe ? objekt.name + " " + aufgabe.name : objekt.name) : "Alle Objekte";
-  var meta = aufgabe ? "je zuständiger Abteilung alle Wege, mit Anmerkung, Geschäftsfeld und Fundstelle"
+  var meta = aufgabe ? "wer es in welchem Geschäftsfeld womit erledigt; Anmerkung neben dem Chip, Fundstelle im Tooltip"
     : objekt ? "je Zelle die Systeme, mit denen die Abteilung diese Aufgabe erledigt"
       : "je Zelle die Aufgabe mit den meisten Systemen; ab 2 redundant, offen = zuständig ohne Weg";
   var koerper = aufgabe ? ebeneAufgabe(objekt, aufgabe)

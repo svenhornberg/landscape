@@ -112,8 +112,8 @@ rechts drei Ebenen:
    Aufgabe darunter und wie viele White Spots offen sind.
 2. **Objekt** – Aufgabe × zuständige Abteilungen, die Zelle zeigt die
    beteiligten Systeme.
-3. **Aufgabe** – je zuständiger Abteilung ein Kasten mit allen Wegen, samt
-   Anmerkung, Geschäftsfeld und Fundstelle in den Daten.
+3. **Aufgabe** – Abteilung × Geschäftsfeld, die Zelle zeigt die Systeme mit
+   Anmerkung daneben; die Fundstelle in den Daten steht im Tooltip des Chips.
 
 Farbcode überall gleich: ein System grün, zwei gelb, drei oder mehr rot, ein
 White Spot schraffiert. Chips für Systeme sind voll umrandet bei `aktiv`,
