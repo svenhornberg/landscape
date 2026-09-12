@@ -139,6 +139,35 @@ Deno.test("Ein Knopf klappt alle Objekte auf und zu", OHNE_SANITIZER, async () =
 });
 
 Deno.test(
+  "Der Baum bleibt beim Rollen stehen und nutzt die ganze Hoehe",
+  OHNE_SANITIZER,
+  async () => {
+    await mitSeite(DEMO, async (seite) => {
+      // Ein niedriges Fenster, alle Objekte auf: der Baum ist hoeher als das
+      // Fenster, die Tabelle rechts hoeher als der Baum
+      await seite.setViewportSize({ width: 1300, height: 300 });
+      await seite.locator(".tree .klapp").click();
+      const explorer = (await seite.locator(".explorer").boundingBox())!;
+      const baumVorher = (await seite.locator(".tree").boundingBox())!;
+      assert(baumVorher.height <= 300, `Baum ist ${baumVorher.height}px hoch`);
+      assert(
+        explorer.height > baumVorher.height + 20,
+        `Explorer nur ${explorer.height}px hoch`,
+      );
+
+      // Nach dem Rollen klebt der Baum oben am Fenster und rollt in sich
+      await seite.evaluate(`window.scrollTo(0, ${Math.round(explorer.y) + 20})`);
+      const baum = (await seite.locator(".tree").boundingBox())!;
+      assertEquals(Math.round(baum.y), 0);
+      assert(
+        await seite.locator(".tree").evaluate((e) => e.scrollHeight > e.clientHeight),
+      );
+      assert(await seite.locator('.tree .node[data-ziel="wurzel"]').isVisible());
+    });
+  },
+);
+
+Deno.test(
   "Ebene 2 und 3 zeigen Chips, Wege und Fundstellen",
   OHNE_SANITIZER,
   async () => {

@@ -43,7 +43,9 @@ select.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .warnliste ul{margin:0;padding-left:18px}.warnliste li{color:var(--ink-2);margin:2px 0}
 .warnliste .q{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--ink-3)}
 .stage{padding:16px 28px 40px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+/* overflow:clip statt hidden: hidden macht den Kasten zum Rollbereich, und
+   der klebende Baum wuerde an ihm statt am Fenster haengen. */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:clip}
 .hinweis{padding:24px 16px;color:var(--ink-2)}
 .hinweis .fehler{color:var(--h3-ink)}
 .hinweis pre{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
@@ -98,7 +100,11 @@ table.l3 th.row .n{white-space:nowrap}
 
 /* Variante B: Explorer, Baum links, Inhalt rechts */
 .explorer{display:grid;grid-template-columns:280px 1fr;min-height:360px}
-.tree{border-right:1px solid var(--line);padding:8px 0;overflow:auto;max-height:75vh}
+/* Der Baum bleibt beim Rollen links stehen und darf so hoch sein wie das
+   Fenster; erst darueber rollt er in sich. So bleiben die Capabilities im
+   Blick, auch wenn rechts eine lange Tabelle steht. align-self:start, weil
+   ein auf Zeilenhoehe gestreckter Rasterposten nicht kleben kann. */
+.tree{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:8px 0}
 .node{display:flex;align-items:center;gap:6px;width:100%;padding:5px 10px 5px 0;white-space:nowrap}
 .node:hover{background:var(--bg)}.node.sel{background:var(--ink);color:#fff}
 .node .tri{display:inline-block;width:16px;text-align:center;color:var(--ink-3);font-size:11px;flex:none}
@@ -123,10 +129,10 @@ table.lvl tr.gruppe th{padding:12px 12px 3px;font-size:11px;letter-spacing:.06em
 .art{display:inline-block;margin-right:6px;color:var(--ink-3);font-size:.9em}
 .node.sel .art{color:#fff}
 .hinweis .wege{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.pane{overflow:auto;min-width:0}
+.pane{overflow:auto;min-width:0;border-left:1px solid var(--line)}
 .pane .ph{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
 .pane .ph h2{font-size:16px}.pane .ph .meta{color:var(--ink-2)}
-@media (max-width:720px){.explorer{grid-template-columns:1fr}.tree{border-right:0;border-bottom:1px solid var(--line);max-height:30vh}}
+@media (max-width:720px){.explorer{grid-template-columns:1fr}.tree{position:static;border-bottom:1px solid var(--line);max-height:30vh}.pane{border-left:0}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
