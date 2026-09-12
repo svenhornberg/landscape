@@ -35,7 +35,7 @@ Wer ein neues Beispiel braucht, bleibt in diesem Vokabular.
 | Kommando         | Status                  |
 |------------------|-------------------------|
 | `bplan validate` | fertig                  |
-| `bplan make`     | Platzhalter, Schritt 2  |
+| `bplan make`     | fertig                  |
 | `bplan serve`    | Platzhalter, Schritt 3  |
 
 Die Reihenfolge steht in `SPEC.md` unter „Arbeitsweise mit Claude Code".
@@ -43,7 +43,7 @@ Die Reihenfolge steht in `SPEC.md` unter „Arbeitsweise mit Claude Code".
 ## Bauen und prüfen
 
 ```bash
-cargo test                                 # 41 Tests, ein Fall je Regel
+cargo test                                 # ein Fall je Regel, dazu make
 cargo clippy --all-targets                 # muss warnungsfrei sein
 cargo fmt --check                          # muss sauber sein
 cargo run -- validate examples/demo        # 0 Fehler, 0 Warnungen
@@ -93,7 +93,12 @@ Dasselbe gilt im privaten Datenrepo, schon aus Gewohnheit.
 - Keine zusätzlichen Abhängigkeiten ohne Grund. Markdown-Tabellen und
   Frontmatter werden bewusst selbst geparst.
 - Das Frontend ist Vanilla JS in einer Datei, keine Build-Toolchain, keine
-  CDNs zur Laufzeit.
+  CDNs zur Laufzeit. Es steht in `frontend/index.html`, wird per
+  `include_str!` eingebettet, und `make` ersetzt darin den Platzhalter
+  `<!--MODEL-->` durch das Modell als JSON.
+- Alle Kennzahlen rechnet das Frontend, das Binary liefert nur das
+  validierte Modell. Neue Kennzahlen gehoeren deshalb ins Frontend, nicht
+  nach `model.rs`.
 
 ## Entscheidungen, die von SPEC.md abweichen oder sie ergänzen
 

@@ -135,11 +135,37 @@ impl Datensatz {
     fn pruefe(&self) -> Ausgabe {
         validate(self.dir.path())
     }
+
+    /// Baut die HTML-Datei nach `rel` innerhalb des Datensatzes.
+    fn mache(&self, rel: &str) -> Ausgabe {
+        make(self.dir.path(), &self.dir.path().join(rel))
+    }
+
+    fn lies(&self, rel: &str) -> String {
+        std::fs::read_to_string(self.dir.path().join(rel)).expect("erzeugte Datei lesen")
+    }
+
+    fn gibt_es(&self, rel: &str) -> bool {
+        self.dir.path().join(rel).exists()
+    }
 }
 
 fn validate(pfad: &Path) -> Ausgabe {
+    starte(&["validate", &pfad.to_string_lossy()])
+}
+
+fn make(pfad: &Path, ausgabe: &Path) -> Ausgabe {
+    starte(&[
+        "make",
+        &pfad.to_string_lossy(),
+        "-o",
+        &ausgabe.to_string_lossy(),
+    ])
+}
+
+fn starte(argumente: &[&str]) -> Ausgabe {
     let ausgabe = Command::new(env!("CARGO_BIN_EXE_bplan"))
-        .args(["validate", &pfad.to_string_lossy()])
+        .args(argumente)
         .env("NO_COLOR", "1")
         .output()
         .expect("bplan starten");
@@ -151,6 +177,19 @@ fn validate(pfad: &Path) -> Ausgabe {
             String::from_utf8_lossy(&ausgabe.stderr)
         ),
     }
+}
+
+/// Schneidet das eingebettete Modell aus einer von `make` erzeugten Datei.
+/// Weil `make` jedes `<` maskiert, ist das erste `</script>` nach dem
+/// Script-Tag verlaesslich dessen Ende.
+fn modell_aus(html: &str) -> serde_json::Value {
+    const START: &str = "<script id=\"model\" type=\"application/json\">";
+    let nach_tag = html.split_once(START).expect("Script-Tag mit dem Modell").1;
+    let json = nach_tag
+        .split_once("</script>")
+        .expect("Ende des Script-Tags")
+        .0;
+    serde_json::from_str(json).expect("eingebettetes Modell ist gültiges JSON")
 }
 
 fn beispiel(name: &str) -> std::path::PathBuf {
@@ -671,18 +710,128 @@ fn tippfehler_beispiel_meldet_datei_zeile_und_vorschlag() {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn serve_und_make_sind_noch_platzhalter() {
-    for (kommando, schritt) in [("serve", "Schritt 3"), ("make", "Schritt 2")] {
-        let ausgabe = Command::new(env!("CARGO_BIN_EXE_bplan"))
-            .args([kommando, &beispiel("demo").to_string_lossy()])
-            .output()
-            .expect("bplan starten");
-        let text = String::from_utf8_lossy(&ausgabe.stderr).to_string();
-        assert!(
-            text.contains("noch nicht implementiert") && text.contains(schritt),
-            "{kommando}: unerwartete Ausgabe {text}"
-        );
-    }
+fn serve_ist_noch_platzhalter() {
+    let ausgabe = Command::new(env!("CARGO_BIN_EXE_bplan"))
+        .args(["serve", &beispiel("demo").to_string_lossy()])
+        .output()
+        .expect("bplan starten");
+    let text = String::from_utf8_lossy(&ausgabe.stderr).to_string();
+    assert!(
+        text.contains("noch nicht implementiert") && text.contains("Schritt 3"),
+        "serve: unerwartete Ausgabe {text}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// make: eigenständige HTML-Datei mit eingebettetem Modell
+// ---------------------------------------------------------------------------
+
+#[test]
+fn make_bettet_das_modell_in_die_html_datei_ein() {
+    let d = Datensatz::neu();
+    d.mache("plan.html")
+        .erwarte_code(0)
+        .erwarte("1 Datei, 3 Zuordnungen, 0 Fehler, 0 Warnungen")
+        .erwarte("plan.html geschrieben");
+
+    let html = d.lies("plan.html");
+    assert!(
+        !html.contains("<!--MODEL-->"),
+        "der Platzhalter steht noch in der Ausgabe"
+    );
+
+    let modell = modell_aus(&html);
+    assert_eq!(modell["geschaeftsfelder"][0]["id"], "gk");
+    assert_eq!(modell["objekte"][0]["id"], "angebot");
+    assert_eq!(modell["zuordnungen"].as_array().unwrap().len(), 3);
+    assert_eq!(modell["zuordnungen"][0]["system"], "shop");
+    assert_eq!(
+        modell["zuordnungen"][0]["quelle"],
+        "data/zuordnungen/gk.md:7"
+    );
+    assert!(modell["generiert"].as_str().unwrap().contains('T'));
+}
+
+/// Fehler blockieren `make`. Es darf dann auch keine halbe Datei entstehen.
+#[test]
+fn make_bricht_bei_fehlern_ab_und_schreibt_nichts() {
+    let d = Datensatz::neu();
+    d.zeilen_anhaengen("| vertrieb | angebot.erstellen | shopsystem | |\n");
+    d.mache("plan.html")
+        .erwarte_code(1)
+        .erwarte("System \"shopsystem\" unbekannt (meintest du \"shop\"?)")
+        .erwarte("abgebrochen");
+    assert!(!d.gibt_es("plan.html"), "trotz Fehlern geschrieben");
+}
+
+/// Warnungen halten `make` nicht auf und landen im Modell, damit das Frontend
+/// sie zeigen kann.
+#[test]
+fn make_laeuft_bei_warnungen_weiter_und_reicht_sie_durch() {
+    let d = Datensatz::neu();
+    d.schreibe(
+        "data/systeme.yaml",
+        &format!("{SYSTEME}- id: mahn\n  name: Mahnlauf-Tool\n  status: auslaufend\n"),
+    );
+    d.mache("plan.html").erwarte_code(0).erwarte("2 Warnungen");
+
+    let warnungen = modell_aus(&d.lies("plan.html"))["warnungen"]
+        .as_array()
+        .expect("Warnungen im Modell")
+        .iter()
+        .map(|w| w.as_str().unwrap_or_default().to_string())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        warnungen.contains("System \"mahn\" hat keine einzige Zuordnung")
+            && warnungen.contains("data/systeme.yaml:7"),
+        "unerwartete Warnungen: {warnungen}"
+    );
+}
+
+/// Der Deploy schreibt nach `out/index.html`, das Verzeichnis gibt es dort
+/// noch nicht.
+#[test]
+fn make_legt_das_zielverzeichnis_an() {
+    let d = Datensatz::neu();
+    d.mache("out/index.html").erwarte_code(0);
+    assert!(d.gibt_es("out/index.html"));
+}
+
+/// Eine Anmerkung darf das Script-Tag mit dem Modell nicht vorzeitig
+/// schliessen. `modell_aus` schneidet am ersten `</script>`; ginge die
+/// Maskierung verloren, waere der Ausschnitt kein gültiges JSON mehr.
+#[test]
+fn make_maskiert_spitze_klammern_im_modell() {
+    let d = Datensatz::neu();
+    d.zeilen_anhaengen("| vertrieb | angebot.versenden | erp | Ende </script><img src=x> |\n");
+    d.mache("plan.html").erwarte_code(0);
+
+    let modell = modell_aus(&d.lies("plan.html"));
+    let zuordnungen = modell["zuordnungen"].as_array().unwrap();
+    assert_eq!(
+        zuordnungen.last().unwrap()["anmerkung"],
+        "Ende </script><img src=x>"
+    );
+}
+
+/// Die erzeugte Datei funktioniert per Doppelklick, also ohne Server und ohne
+/// Netz. Ein externer Verweis waere ein Rückschritt.
+#[test]
+fn make_laeuft_auf_dem_demo_beispiel_ohne_externe_verweise() {
+    let dir = TempDir::new().unwrap();
+    let ziel = dir.path().join("bebauungsplan.html");
+    make(&beispiel("demo"), &ziel).erwarte_code(0);
+
+    let html = std::fs::read_to_string(&ziel).expect("erzeugte Datei lesen");
+    assert!(
+        !html.contains("http://") && !html.contains("https://"),
+        "externer Verweis in der erzeugten Datei"
+    );
+
+    let modell = modell_aus(&html);
+    assert_eq!(modell["zuordnungen"].as_array().unwrap().len(), 33);
+    assert_eq!(modell["warnungen"].as_array().unwrap().len(), 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -740,4 +889,19 @@ fn voellig_leere_yaml_datei_ist_gueltig() {
     let d = Datensatz::neu();
     d.schreibe("data/systeme.yaml", "");
     d.pruefe().erwarte_nicht("YAML nicht lesbar");
+}
+
+/// Auch aus einem leeren `data/` entsteht eine Seite, dann eben eine leere.
+#[test]
+fn make_auf_leerem_data_verzeichnis_ergibt_eine_leere_seite() {
+    let dir = TempDir::new().unwrap();
+    std::fs::create_dir_all(dir.path().join("data/zuordnungen")).unwrap();
+    let ziel = dir.path().join("plan.html");
+    make(dir.path(), &ziel)
+        .erwarte_code(0)
+        .erwarte("0 Dateien, 0 Zuordnungen, 0 Fehler, 0 Warnungen");
+
+    let modell = modell_aus(&std::fs::read_to_string(&ziel).expect("erzeugte Datei lesen"));
+    assert_eq!(modell["objekte"].as_array().unwrap().len(), 0);
+    assert_eq!(modell["zuordnungen"].as_array().unwrap().len(), 0);
 }

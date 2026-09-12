@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bebauungsplan</title>
+<style>
+:root{--bg:#f2f4f6;--panel:#fff;--ink:#1c262e;--ink-2:#55636d;--ink-3:#8a98a3;--line:#d9dfe4;--line-2:#c4ccd3;
+ --h0:#fff;--h1:#dbeee9;--h2:#f6e3b8;--h3:#f2c2b0;--h1-ink:#1f6b5a;--h2-ink:#8a5b00;--h3-ink:#9a3418}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}
+h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;margin:0;font-weight:600}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+.top{display:flex;align-items:baseline;gap:24px;padding:20px 28px 0;flex-wrap:wrap}
+.top h1{font-size:22px}.top .sub{color:var(--ink-2)}.top .right{margin-left:auto;color:var(--ink-2)}
+.bar{display:flex;align-items:center;gap:32px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.group .lbl{color:var(--ink-2);margin-right:4px}
+.chip{padding:5px 11px;border:1px solid var(--line-2);border-radius:999px;background:var(--panel)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.warnknopf{margin-left:auto;padding:5px 11px;border:1px solid var(--h2);border-radius:999px;background:var(--h2);color:var(--h2-ink)}
+.warnliste{margin:16px 28px 0;padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.warnliste ul{margin:0;padding-left:18px}.warnliste li{color:var(--ink-2);margin:2px 0}
+.warnliste .q{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--ink-3)}
+.stage{padding:16px 28px 40px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.hinweis{padding:24px 16px;color:var(--ink-2)}
+.hinweis .fehler{color:var(--h3-ink)}
+.hinweis pre{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+
+/* Farbcode ueberall gleich: 1 System gruen, 2 gelb, 3+ rot, White Spot schraffiert */
+.n0{background:var(--h0);background-image:repeating-linear-gradient(135deg,transparent 0 6px,#eef1f3 6px 7px)}
+.n1{background:var(--h1)}.n2{background:var(--h2)}.n3{background:var(--h3)}
+.sys{display:inline-block;padding:2px 7px;border-radius:4px;font-size:12px;background:rgba(255,255,255,.7);border:1px solid rgba(28,38,46,.25);white-space:nowrap}
+.sys.auslaufend{border-style:dashed;color:var(--ink-2)}
+.sys.geplant{border-style:dotted;background:transparent;color:var(--ink-3)}
+.legend{display:flex;gap:18px;align-items:center;color:var(--ink-2);padding:10px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.legend .sw{display:inline-block;width:14px;height:14px;border:1px solid var(--line-2);vertical-align:-2px;margin-right:6px}
+.legend .sw.n0{background-image:repeating-linear-gradient(135deg,transparent 0 3px,#c9d2d8 3px 4px)}
+
+/* Ebene 1 und 2: Tabellen */
+table.lvl{border-collapse:separate;border-spacing:0;width:100%}
+table.lvl th,table.lvl td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:middle}
+table.lvl thead th{padding:8px 10px;text-align:left;font-weight:500;color:var(--ink-2);border-bottom:2px solid var(--ink);white-space:nowrap;background:var(--panel);position:sticky;top:0}
+table.lvl th.row{text-align:left;min-width:240px;background:var(--panel)}
+table.lvl th.row button{width:100%;padding:10px 12px;display:flex;align-items:baseline;gap:10px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-size:15px;font-weight:600}
+table.lvl th.row button:hover{background:var(--bg)}
+table.lvl th.row .n{color:var(--ink-3);font-weight:400;font-size:12px;font-family:"IBM Plex Sans",system-ui,sans-serif}
+table.lvl th.row .go{margin-left:auto;color:var(--ink-3);font-weight:400}
+table.lvl td.c{min-width:100px;height:44px;text-align:center}
+table.lvl td.c .cnt{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-size:17px;font-weight:600}
+.n1 .cnt{color:var(--h1-ink)}.n2 .cnt{color:var(--h2-ink)}.n3 .cnt{color:var(--h3-ink)}
+.n0 .cnt{color:var(--ink-3);font-size:13px;font-weight:400}
+table.lvl td.c .sub{font-size:11px;color:var(--ink-2);display:block;margin-top:-2px}
+table.lvl td.na{background:var(--bg)}
+table.lvl td.c.click{cursor:pointer}table.lvl td.c.click:hover{box-shadow:inset 0 0 0 2px var(--ink)}
+table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justify-content:center}
+
+/* Ebene 3: je zustaendiger Abteilung ein Kasten mit allen Wegen */
+.l3{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px}
+.dbox{border:1px solid var(--line-2);border-radius:6px;padding:10px 12px}
+.dbox h3{font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dbox h3 .v{font-size:13px;font-weight:500}
+.dbox.n1 h3 .v{color:var(--h1-ink)}.dbox.n2 h3 .v{color:var(--h2-ink)}.dbox.n3 h3 .v{color:var(--h3-ink)}
+.dbox.n0 h3 .v{color:var(--ink-3);font-weight:400}
+.dbox .way{padding:6px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:auto 1fr auto;gap:2px 8px;align-items:baseline}
+.dbox .way .gf{color:var(--ink-3);font-size:12px;white-space:nowrap}
+.dbox .way .quelle{grid-column:1/-1;color:var(--ink-3);font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.dbox .empty{color:var(--ink-3);padding:8px 0}
+
+/* Variante B: Explorer, Baum links, Inhalt rechts */
+.explorer{display:grid;grid-template-columns:280px 1fr;min-height:60vh}
+.tree{border-right:1px solid var(--line);padding:8px 0;overflow:auto;max-height:75vh}
+.node{display:flex;align-items:center;gap:6px;width:100%;padding:5px 10px 5px 0;white-space:nowrap}
+.node:hover{background:var(--bg)}.node.sel{background:var(--ink);color:#fff}
+.node .tri{display:inline-block;width:16px;text-align:center;color:var(--ink-3);font-size:11px;flex:none}
+.node.sel .tri{color:var(--line-2)}
+.node .badge{margin-left:auto;font-size:11px;padding:1px 6px;border-radius:999px;background:var(--h3);color:var(--h3-ink)}
+.node .badge.w{background:var(--bg);color:var(--ink-2)}
+.node.sel .badge{background:rgba(255,255,255,.2);color:#fff}
+.node.d0{padding-left:8px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px}
+.node.d1{padding-left:24px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px}
+.node.d2{padding-left:44px;color:var(--ink-2)}.node.d2.sel{color:#fff}
+.pane{overflow:auto}
+.pane .ph{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.pane .ph h2{font-size:16px}.pane .ph .meta{color:var(--ink-2)}
+@media (max-width:720px){.explorer{grid-template-columns:1fr}.tree{border-right:0;border-bottom:1px solid var(--line);max-height:30vh}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="top"><h1>Bebauungsplan</h1><span class="sub" id="stand"></span><span class="right" id="zahlen"></span></div>
+<div class="bar"><div class="group" id="gfleiste"><span class="lbl">Geschäftsfeld</span></div><button class="warnknopf" id="warnknopf" hidden></button></div>
+<div class="warnliste" id="warnliste" hidden></div>
+<div class="stage"><div class="card" id="haupt"></div></div>
+
+<!-- `bplan make` ersetzt den Platzhalter durch das Modell. Bleibt er stehen,
+     weil `bplan serve` das Frontend unveraendert ausliefert, holt das Skript
+     unten api/model. -->
+<script id="model" type="application/json"><!--MODEL--></script>
+
+<script>
+"use strict";
+
+// Das Binary liefert nur das validierte Modell. Alle Kennzahlen (Wege,
+// Redundanz, White Spots) rechnet dieses Skript selbst aus den Rohdaten,
+// damit die Logik an genau einer Stelle liegt. Definitionen siehe SPEC.md.
+
+var modell = null;
+var zustand = {gf: "alle", objekt: null, aufgabe: null, offen: {}, warnungen: false};
+
+// Nachschlagewerke, je geladenem Modell einmal gebaut
+var nachSystem = {}, nachObjekt = {}, nachGf = {};
+var wegeIndex = {};          // "abteilung|objekt|aufgabe" -> Zuordnungen
+
+// Je Zeichnung einmal: der aktive Geschaeftsfeld-Filter und was daraus folgt
+var gfFilter = {}, sichtbareAbteilungen = [], zustaendigFuer = {};
+
+function esc(wert) {
+  return String(wert === null || wert === undefined ? "" : wert)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function schluessel(abteilung, objekt, aufgabe) {
+  return abteilung + "|" + objekt + "|" + aufgabe;
+}
+
+// ---------------------------------------------------------------------------
+// Modell laden
+// ---------------------------------------------------------------------------
+
+/// Das von `bplan make` eingebettete Modell, oder null, wenn dort noch der
+/// Platzhalter steht.
+function eingebettetesModell() {
+  var el = document.getElementById("model");
+  if (!el) return null;
+  var text = el.textContent.trim();
+  if (text.charAt(0) !== "{") return null;
+  try {
+    return JSON.parse(text);
+  } catch (fehler) {
+    return null;
+  }
+}
+
+function starte() {
+  var eingebettet = eingebettetesModell();
+  if (eingebettet) {
+    uebernimm(eingebettet);
+    return;
+  }
+  // Kein eingebettetes Modell: das Frontend wird von `bplan serve`
+  // ausgeliefert. Bei Validierungsfehlern kommt HTTP 422 mit der Liste.
+  fetch("api/model").then(function (antwort) {
+    return antwort.json().then(function (daten) {
+      if (antwort.ok) {
+        uebernimm(daten);
+      } else {
+        zeigeFehler(daten && daten.fehler ? daten.fehler : []);
+      }
+    });
+  }).catch(function () {
+    melde("Kein Modell gefunden. Diese Datei wurde ohne <code>bplan make</code> " +
+          "erzeugt und es antwortet auch kein <code>bplan serve</code>.");
+  });
+}
+
+function uebernimm(daten) {
+  modell = daten;
+  nachSystem = {}; nachObjekt = {}; nachGf = {}; wegeIndex = {};
+  modell.systeme.forEach(function (s) { nachSystem[s.id] = s; });
+  modell.objekte.forEach(function (o) { nachObjekt[o.id] = o; });
+  modell.geschaeftsfelder.forEach(function (g) { nachGf[g.id] = g; });
+  modell.zuordnungen.forEach(function (z) {
+    var k = schluessel(z.abteilung, z.objekt, z.aufgabe);
+    (wegeIndex[k] || (wegeIndex[k] = [])).push(z);
+  });
+  if (zustand.objekt && !nachObjekt[zustand.objekt]) {
+    zustand.objekt = null;
+    zustand.aufgabe = null;
+  }
+  zeichne();
+}
+
+function melde(html) {
+  document.getElementById("haupt").innerHTML = '<div class="hinweis">' + html + "</div>";
+}
+
+function zeigeFehler(fehler) {
+  melde('<p class="fehler">Die Daten haben Fehler, deshalb gibt es kein Modell.</p>' +
+        "<pre>" + esc(fehler.join("\n")) + "</pre>");
+}
+
+// ---------------------------------------------------------------------------
+// Kennzahlen, gerechnet nach den Definitionen in SPEC.md
+// ---------------------------------------------------------------------------
+
+/// Alle Zeilen einer Zelle (Aufgabe x Abteilung) im aktuellen Filter.
+function wege(abteilung, objekt, aufgabe) {
+  var liste = wegeIndex[schluessel(abteilung, objekt, aufgabe)];
+  if (!liste) return [];
+  return liste.filter(function (z) { return gfFilter[z.gf] === true; });
+}
+
+/// Wege einer Zelle: verschiedene Systeme ueber alle gefilterten
+/// Geschaeftsfelder. Redundanz ab 2, White Spot bei 0.
+function systeme(abteilung, objekt, aufgabe) {
+  var gesehen = {}, ergebnis = [];
+  wege(abteilung, objekt, aufgabe).forEach(function (z) {
+    if (gesehen[z.system] !== true) {
+      gesehen[z.system] = true;
+      ergebnis.push(z.system);
+    }
+  });
+  return ergebnis;
+}
+
+function hitze(anzahl) {
+  return anzahl === 0 ? "n0" : anzahl === 1 ? "n1" : anzahl === 2 ? "n2" : "n3";
+}
+
+/// Redundanzen und White Spots einer Aufgabe ueber alle zustaendigen
+/// Abteilungen.
+function befundeAufgabe(objektId, aufgabeId) {
+  var redundant = 0, luecken = 0;
+  (zustaendigFuer[objektId] || []).forEach(function (abt) {
+    var anzahl = systeme(abt.id, objektId, aufgabeId).length;
+    if (anzahl >= 2) redundant++;
+    if (anzahl === 0) luecken++;
+  });
+  return {redundant: redundant, luecken: luecken};
+}
+
+function befundeObjekt(objekt) {
+  var redundant = 0, luecken = 0;
+  objekt.aufgaben.forEach(function (a) {
+    var befunde = befundeAufgabe(objekt.id, a.id);
+    redundant += befunde.redundant;
+    luecken += befunde.luecken;
+  });
+  return {redundant: redundant, luecken: luecken};
+}
+
+/// Ebene 1: hoechster Wegewert ueber die Aufgaben, dazu die White Spots.
+function objektZelle(objekt, abteilungId) {
+  var max = 0, luecken = 0;
+  objekt.aufgaben.forEach(function (a) {
+    var anzahl = systeme(abteilungId, objekt.id, a.id).length;
+    if (anzahl > max) max = anzahl;
+    if (anzahl === 0) luecken++;
+  });
+  return {max: max, luecken: luecken};
+}
+
+/// Eine Abteilung ist sichtbar, wenn sie in mindestens einem gefilterten
+/// Geschaeftsfeld arbeitet, und zustaendig, wenn das Objekt in `bearbeitet`
+/// steht. Nur dort gibt es White Spots.
+function filterVorbereiten() {
+  gfFilter = {};
+  modell.geschaeftsfelder.forEach(function (g) {
+    if (zustand.gf === "alle" || zustand.gf === g.id) gfFilter[g.id] = true;
+  });
+  sichtbareAbteilungen = modell.abteilungen.filter(function (a) {
+    return a.geschaeftsfelder.some(function (id) { return gfFilter[id] === true; });
+  });
+  zustaendigFuer = {};
+  modell.objekte.forEach(function (o) {
+    zustaendigFuer[o.id] = sichtbareAbteilungen.filter(function (a) {
+      return a.bearbeitet.indexOf(o.id) >= 0;
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Bausteine
+// ---------------------------------------------------------------------------
+
+/// System-Chip: aktiv voll, auslaufend gestrichelt, geplant gepunktet.
+function chip(systemId) {
+  var s = nachSystem[systemId];
+  return '<span class="sys ' + esc(s && s.status ? s.status : "aktiv") + '">' +
+    esc(s ? s.name : systemId) + "</span>";
+}
+
+/// Badge je Baumknoten: Redundanzen rot, sonst White Spots grau, sonst nichts.
+function badge(befunde) {
+  if (befunde.redundant) return '<span class="badge">' + befunde.redundant + "</span>";
+  if (befunde.luecken) return '<span class="badge w">' + befunde.luecken + "</span>";
+  return "";
+}
+
+function wortWege(anzahl) {
+  return anzahl === 0 ? "White Spot" : anzahl === 1 ? "1 Weg" : anzahl + " Wege";
+}
+
+var legende =
+  '<div class="legend">' +
+  '<span><span class="sw n1"></span>1 System</span>' +
+  '<span><span class="sw n2"></span>2</span>' +
+  '<span><span class="sw n3"></span>3+</span>' +
+  '<span><span class="sw n0"></span>White Spot</span>' +
+  '<span><span class="sw" style="background:var(--bg)"></span>nicht zuständig</span>' +
+  '<span><span class="sys aktiv">aktiv</span> <span class="sys auslaufend">auslaufend</span> ' +
+  '<span class="sys geplant">geplant</span></span>' +
+  "</div>";
+
+// ---------------------------------------------------------------------------
+// Die drei Ebenen
+// ---------------------------------------------------------------------------
+
+/// Ebene 1: Objekt x Abteilung. Zelle zeigt den hoechsten Redundanzwert der
+/// Aufgaben darunter und "N offen" fuer White Spots.
+function ebeneObjekte() {
+  if (!modell.objekte.length) {
+    return '<div class="hinweis">Noch keine Objekte in <code>aufgaben.yaml</code>.</div>';
+  }
+  if (!sichtbareAbteilungen.length) {
+    return '<div class="hinweis">Keine Abteilung arbeitet in diesem Geschäftsfeld.</div>';
+  }
+  var html = '<table class="lvl"><thead><tr><th>Objekt</th>';
+  sichtbareAbteilungen.forEach(function (a) { html += "<th>" + esc(a.name) + "</th>"; });
+  html += "</tr></thead><tbody>";
+
+  modell.objekte.forEach(function (o) {
+    var befunde = befundeObjekt(o);
+    html += '<tr><th class="row"><button data-objekt="' + esc(o.id) + '">' + esc(o.name) +
+      '<span class="n">' + o.aufgaben.length +
+      (o.aufgaben.length === 1 ? " Aufgabe" : " Aufgaben") +
+      (befunde.redundant ? " · " + befunde.redundant + " redundant" : "") +
+      (befunde.luecken ? " · " + befunde.luecken + " offen" : "") +
+      '</span><span class="go">›</span></button></th>';
+    sichtbareAbteilungen.forEach(function (a) {
+      if (a.bearbeitet.indexOf(o.id) < 0) {
+        html += '<td class="c na"></td>';
+        return;
+      }
+      var zelle = objektZelle(o, a.id);
+      html += '<td class="c click ' + hitze(zelle.max) + '" data-objekt="' + esc(o.id) + '">' +
+        '<span class="cnt">' + (zelle.max || "–") + "</span>" +
+        (zelle.luecken ? '<span class="sub">' + zelle.luecken + " offen</span>" : "") +
+        "</td>";
+    });
+    html += "</tr>";
+  });
+  return html + "</tbody></table>";
+}
+
+/// Ebene 2: Aufgabe x zustaendige Abteilungen, Zelle zeigt die System-Chips.
+function ebeneObjekt(objekt) {
+  var abteilungen = zustaendigFuer[objekt.id] || [];
+  if (!abteilungen.length) {
+    return '<div class="hinweis">Im aktuellen Filter ist keine Abteilung für ' +
+      esc(objekt.name) + " zuständig.</div>";
+  }
+  if (!objekt.aufgaben.length) {
+    return '<div class="hinweis">' + esc(objekt.name) + " hat noch keine Aufgaben.</div>";
+  }
+  var html = '<table class="lvl"><thead><tr><th>Aufgabe</th>';
+  abteilungen.forEach(function (a) { html += "<th>" + esc(a.name) + "</th>"; });
+  html += "</tr></thead><tbody>";
+
+  objekt.aufgaben.forEach(function (auf) {
+    var befunde = befundeAufgabe(objekt.id, auf.id);
+    html += '<tr><th class="row"><button data-objekt="' + esc(objekt.id) +
+      '" data-aufgabe="' + esc(auf.id) + '">' + esc(auf.name) + '<span class="n">' +
+      (befunde.redundant ? befunde.redundant + " redundant" : "") +
+      (befunde.redundant && befunde.luecken ? " · " : "") +
+      (befunde.luecken ? befunde.luecken + " offen" : "") +
+      '</span><span class="go">›</span></button></th>';
+    abteilungen.forEach(function (a) {
+      var liste = systeme(a.id, objekt.id, auf.id);
+      html += '<td class="c click ' + hitze(liste.length) +
+        '" data-objekt="' + esc(objekt.id) + '" data-aufgabe="' + esc(auf.id) + '">' +
+        (liste.length
+          ? '<div class="chips">' + liste.map(chip).join("") + "</div>"
+          : '<span class="cnt">–</span>') +
+        "</td>";
+    });
+    html += "</tr>";
+  });
+  return html + "</tbody></table>";
+}
+
+/// Ebene 3: je zustaendiger Abteilung ein Kasten mit allen Wegen. Leerer
+/// Kasten = White Spot.
+function ebeneAufgabe(objekt, aufgabe) {
+  var abteilungen = zustaendigFuer[objekt.id] || [];
+  if (!abteilungen.length) {
+    return '<div class="hinweis">Im aktuellen Filter ist keine Abteilung für ' +
+      esc(objekt.name) + " zuständig.</div>";
+  }
+  var html = '<div class="l3">';
+  abteilungen.forEach(function (a) {
+    var liste = wege(a.id, objekt.id, aufgabe.id);
+    var anzahl = systeme(a.id, objekt.id, aufgabe.id).length;
+    html += '<div class="dbox ' + hitze(anzahl) + '"><h3>' + esc(a.name) +
+      '<span class="v">' + wortWege(anzahl) + "</span></h3>";
+    if (!liste.length) {
+      html += '<div class="empty">Keine Zuordnung erfasst, obwohl zuständig.</div>';
+    }
+    liste.forEach(function (z) {
+      var gf = nachGf[z.gf];
+      html += '<div class="way">' + chip(z.system) +
+        "<span>" + esc(z.anmerkung) + "</span>" +
+        '<span class="gf">' + esc(gf ? gf.name : z.gf) + "</span>" +
+        '<span class="quelle">' + esc(z.quelle) + "</span></div>";
+    });
+    html += "</div>";
+  });
+  return html + "</div>";
+}
+
+// ---------------------------------------------------------------------------
+// Explorer
+// ---------------------------------------------------------------------------
+
+function baum() {
+  var html = '<div class="tree"><button class="node d0' + (zustand.objekt ? "" : " sel") +
+    '" data-ziel="wurzel"><span class="tri"></span>Alle Objekte</button>';
+  modell.objekte.forEach(function (o) {
+    var aufgeklappt = zustand.offen[o.id] === true;
+    html += '<button class="node d1' +
+      (zustand.objekt === o.id && !zustand.aufgabe ? " sel" : "") +
+      '" data-objekt="' + esc(o.id) + '" data-klappen="1"><span class="tri">' +
+      (aufgeklappt ? "▾" : "▸") + "</span>" + esc(o.name) +
+      badge(befundeObjekt(o)) + "</button>";
+    if (!aufgeklappt) return;
+    o.aufgaben.forEach(function (a) {
+      html += '<button class="node d2' +
+        (zustand.objekt === o.id && zustand.aufgabe === a.id ? " sel" : "") +
+        '" data-objekt="' + esc(o.id) + '" data-aufgabe="' + esc(a.id) +
+        '"><span class="tri"></span>' + esc(a.name) +
+        badge(befundeAufgabe(o.id, a.id)) + "</button>";
+    });
+  });
+  return html + "</div>";
+}
+
+function inhalt() {
+  var objekt = zustand.objekt ? nachObjekt[zustand.objekt] : null;
+  var aufgabe = null;
+  if (objekt && zustand.aufgabe) {
+    aufgabe = objekt.aufgaben.filter(function (a) {
+      return a.id === zustand.aufgabe;
+    })[0] || null;
+  }
+  var titel = objekt ? (aufgabe ? objekt.name + " " + aufgabe.name : objekt.name) : "Alle Objekte";
+  var meta = aufgabe ? "je Abteilung alle Wege im Detail"
+    : objekt ? "Aufgaben × zuständige Abteilungen"
+      : "Objekte × Abteilungen, schlechteste Aufgabe je Zelle";
+  var koerper = aufgabe ? ebeneAufgabe(objekt, aufgabe)
+    : objekt ? ebeneObjekt(objekt)
+      : ebeneObjekte();
+  return '<div class="pane"><div class="ph"><h2>' + esc(titel) +
+    '</h2><span class="meta">' + meta + "</span></div>" + koerper + "</div>";
+}
+
+// ---------------------------------------------------------------------------
+// Zeichnen
+// ---------------------------------------------------------------------------
+
+function standText(wert) {
+  var treffer = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(wert || "");
+  if (!treffer) return wert ? "Stand: " + wert : "";
+  return "Stand: " + treffer[3] + "." + treffer[2] + "." + treffer[1] +
+    ", " + treffer[4] + ":" + treffer[5];
+}
+
+function zeichneKopf() {
+  document.getElementById("stand").textContent = standText(modell.generiert);
+
+  var aufgaben = modell.objekte.reduce(function (summe, o) {
+    return summe + o.aufgaben.length;
+  }, 0);
+  document.getElementById("zahlen").textContent =
+    modell.objekte.length + " Objekte · " + aufgaben + " Aufgaben · " +
+    modell.zuordnungen.length + " Zuordnungen";
+
+  var leiste = document.getElementById("gfleiste");
+  Array.prototype.forEach.call(leiste.querySelectorAll(".chip"), function (c) { c.remove(); });
+  [{id: "alle", name: "Alle"}].concat(modell.geschaeftsfelder).forEach(function (g) {
+    var knopf = document.createElement("button");
+    knopf.className = "chip" + (zustand.gf === g.id ? " on" : "");
+    knopf.textContent = g.name;
+    knopf.onclick = function () { zustand.gf = g.id; zeichne(); };
+    leiste.appendChild(knopf);
+  });
+
+  zeichneWarnungen(modell.warnungen || []);
+}
+
+function zeichneWarnungen(warnungen) {
+  var knopf = document.getElementById("warnknopf");
+  var liste = document.getElementById("warnliste");
+  knopf.hidden = warnungen.length === 0;
+  liste.hidden = !(zustand.warnungen && warnungen.length);
+  if (!warnungen.length) return;
+
+  knopf.textContent = warnungen.length +
+    (warnungen.length === 1 ? " Warnung" : " Warnungen") +
+    (zustand.warnungen ? " ausblenden" : " anzeigen");
+  knopf.onclick = function () { zustand.warnungen = !zustand.warnungen; zeichne(); };
+  // Jede Warnung kommt als "Datei:Zeile  Text", getrennt durch zwei Leerzeichen.
+  liste.innerHTML = "<ul>" + warnungen.map(function (w) {
+    var teile = String(w).split(/ {2,}/);
+    return teile.length > 1
+      ? '<li><span class="q">' + esc(teile[0]) + "</span> " +
+        esc(teile.slice(1).join(" ")) + "</li>"
+      : "<li>" + esc(w) + "</li>";
+  }).join("") + "</ul>";
+}
+
+function zeichne() {
+  filterVorbereiten();
+  zeichneKopf();
+  document.getElementById("haupt").innerHTML =
+    '<div class="explorer">' + baum() + inhalt() + "</div>" + legende;
+}
+
+document.getElementById("haupt").addEventListener("click", function (ereignis) {
+  var knopf = ereignis.target.closest("[data-objekt],[data-ziel]");
+  if (!knopf) return;
+  if (knopf.dataset.ziel === "wurzel") {
+    zustand.objekt = null;
+    zustand.aufgabe = null;
+    zeichne();
+    return;
+  }
+  var objekt = knopf.dataset.objekt;
+  // Ein erneuter Klick auf den schon gewaehlten Objektknoten klappt ihn zu.
+  if (knopf.dataset.klappen && zustand.objekt === objekt && !zustand.aufgabe) {
+    zustand.offen[objekt] = zustand.offen[objekt] !== true;
+    zeichne();
+    return;
+  }
+  zustand.objekt = objekt;
+  zustand.aufgabe = knopf.dataset.aufgabe || null;
+  zustand.offen[objekt] = true;
+  zeichne();
+});
+
+starte();
+</script>
+</body>
+</html>

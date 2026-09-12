@@ -12,7 +12,7 @@ Die vollständige Spezifikation steht in [SPEC.md](SPEC.md).
 | Kommando         | Status                                        |
 |------------------|-----------------------------------------------|
 | `bplan validate` | fertig                                        |
-| `bplan make`     | Platzhalter, Schritt 2                        |
+| `bplan make`     | fertig                                        |
 | `bplan serve`    | Platzhalter, Schritt 3                        |
 
 ## Ausprobieren
@@ -26,6 +26,7 @@ cd landscape
 
 cargo run -- validate examples/demo        # läuft sauber durch
 cargo run -- validate examples/tippfehler  # meldet Tippfehler mit Zeile und Vorschlag
+cargo run -- make examples/demo            # schreibt bebauungsplan.html
 cargo test                                 # ein Testfall je Regel aus SPEC.md
 ```
 
@@ -48,6 +49,37 @@ data/zuordnungen/geschaeftskunden.md:18  Fehler   Abteilung "vertrib" unbekannt 
 Fehler ergeben Exit-Code 1, Warnungen allein Exit-Code 0. Damit taugt
 `bplan validate` als Git-Hook und als Rückmeldung an ein LLM, das die Dateien
 editiert hat.
+
+## Die HTML-Datei
+
+```bash
+bplan make PFAD [-o bebauungsplan.html]
+```
+
+`make` prüft zuerst die Daten. Fehler brechen ab, Warnungen werden nur
+angezeigt. Danach schreibt es eine einzelne HTML-Datei mit dem Modell darin:
+kein Server, kein Netzzugriff, per Doppelklick zu öffnen und per Mail zu
+verschicken.
+
+Die Oberfläche ist ein Explorer. Links ein Baum aus Objekten und Aufgaben,
+rechts drei Ebenen:
+
+1. **Alle Objekte** – Objekt × Abteilung. Die Zelle zeigt die schlechteste
+   Aufgabe darunter und wie viele White Spots offen sind.
+2. **Objekt** – Aufgabe × zuständige Abteilungen, die Zelle zeigt die
+   beteiligten Systeme.
+3. **Aufgabe** – je zuständiger Abteilung ein Kasten mit allen Wegen, samt
+   Anmerkung, Geschäftsfeld und Fundstelle in den Daten.
+
+Farbcode überall gleich: ein System grün, zwei gelb, drei oder mehr rot, ein
+White Spot schraffiert. Chips für Systeme sind voll umrandet bei `aktiv`,
+gestrichelt bei `auslaufend`, gepunktet bei `geplant`.
+
+Alle Kennzahlen rechnet das Frontend selbst aus den Rohdaten; das Binary
+liefert nur das validierte Modell. So liegt diese Logik an einer Stelle. Das
+Frontend steht in [`frontend/index.html`](frontend/index.html) und ist per
+`include_str!` eingebettet; `make` ersetzt darin den Platzhalter durch das
+Modell als JSON.
 
 ## Eigene Daten
 
@@ -105,7 +137,9 @@ src/
   parse.rs         YAML, Frontmatter, Markdown-Tabellen
   validate.rs      Regeln, Fehler und Warnungen mit Positionen
   serve.rs         Platzhalter
-  make.rs          Platzhalter
+  make.rs          HTML-Datei mit eingebettetem Modell
+frontend/
+  index.html       das komplette Frontend, Vanilla JS, ohne Build-Schritt
 tests/
   regeln.rs        ein Testfall je Regel
 examples/
