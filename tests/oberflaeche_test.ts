@@ -493,7 +493,12 @@ Deno.test(
   OHNE_SANITIZER,
   async () => {
     await mitSeite(DEMO, async (seite) => {
-      await seite.locator("#systemleiste .chip", { hasText: "CRM" }).click();
+      await seite.selectOption("#systemwahl", "crm");
+      assert(
+        await seite.locator("#systemwahl.on").isVisible(),
+        "Auswahl ist nicht als Blase markiert",
+      );
+      assert(await seite.locator("#systemweg").isVisible(), "kein x zum Aufheben");
       assertEquals(await seite.evaluate("location.hash"), "#system=crm");
       assertStringIncludes(
         (await seite.textContent("#systemleiste")) ?? "",
@@ -559,7 +564,9 @@ Deno.test(
       assertStringIncludes((await seite.textContent(".legend")) ?? "", "CRM im Einsatz");
 
       // Abwahl: alles wieder da, der Rest der Adresse bleibt
-      await seite.locator("#systemleiste .chip", { hasText: "Alle" }).click();
+      await seite.locator("#systemweg").click();
+      assert(await seite.locator("#systemweg").isHidden());
+      assertEquals(await seite.inputValue("#systemwahl"), "");
       assertEquals(await seite.locator(".mark, .dim").count(), 0);
       assertEquals(await seite.locator(".tree .node.d1").count(), 5);
       assertEquals(
@@ -570,10 +577,8 @@ Deno.test(
 
     // ueber den Permalink; ein System, das nur eine Abteilung nutzt
     await mitSeite(DEMO + "#system=oms", async (seite) => {
-      assertEquals(
-        await seite.locator("#systemleiste .chip.on").textContent(),
-        "Order-Management",
-      );
+      assertEquals(await seite.inputValue("#systemwahl"), "oms");
+      assert(await seite.locator("#systemwahl.on").isVisible());
       assertEquals(await seite.locator("tbody tr").count(), 1);
       assertEquals(await seite.locator("td.c.mark").count(), 1);
     });

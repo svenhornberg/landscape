@@ -27,6 +27,9 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.group .lbl{color:var(--ink-2);margin-right:4px}
 .chip{padding:5px 11px;border:1px solid var(--line-2);border-radius:999px;background:var(--panel)}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+select.chip{font:inherit;color:inherit;background:var(--panel);cursor:pointer;padding:4px 8px}
+select.chip.on{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:500}
+#systemweg{padding:5px 9px;margin-left:-4px}
 .warnknopf{margin-left:auto;padding:5px 11px;border:1px solid var(--h2);border-radius:999px;background:var(--h2);color:var(--h2-ink)}
 .warnliste{margin:16px 28px 0;width:0;min-width:calc(100% - 56px);padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
 .warnliste ul{margin:0;padding-left:18px}.warnliste li{color:var(--ink-2);margin:2px 0}
@@ -113,7 +116,7 @@ table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justif
 <body>
 <div class="seite">
 <div class="top"><h1>Bebauungsplan</h1><span class="sub" id="stand"></span><span class="right" id="zahlen"></span></div>
-<div class="bar"><div class="group" id="gfleiste"><span class="lbl">Geschäftsfeld</span></div><div class="group" id="systemleiste"><span class="lbl">System</span></div><button class="warnknopf" id="warnknopf" hidden></button></div>
+<div class="bar"><div class="group" id="gfleiste"><span class="lbl">Geschäftsfeld</span></div><div class="group" id="systemleiste"><span class="lbl">System</span><select class="chip" id="systemwahl" title="Nur zeigen, was mit diesem System gemacht wird"></select><button class="chip on" id="systemweg" title="Systemfilter aufheben" hidden>×</button><span class="lbl treffer" id="systemtreffer" hidden></span></div><button class="warnknopf" id="warnknopf" hidden></button></div>
 <div class="warnliste" id="warnliste" hidden></div>
 <div class="stage"><div class="card" id="haupt"></div></div>
 </div>
@@ -657,24 +660,28 @@ function zeichneKopf() {
     leiste.appendChild(knopf);
   });
 
-  var systemleiste = document.getElementById("systemleiste");
-  Array.prototype.forEach.call(
-    systemleiste.querySelectorAll(".chip, .treffer"),
-    function (c) { c.remove(); },
-  );
-  [{id: null, name: "Alle"}].concat(modell.systeme).forEach(function (sys) {
-    var knopf = document.createElement("button");
-    knopf.className = "chip" + (zustand.system === sys.id ? " on" : "");
-    knopf.textContent = sys.name;
-    knopf.onclick = function () { zustand.system = sys.id; zeichne(); };
-    systemleiste.appendChild(knopf);
+  // Systemfilter: ein Auswahlfeld hinter den Geschaeftsfeldern. Gewaehlt wird
+  // es zur dunklen Blase, daneben ein x zum Aufheben und die Bilanz.
+  var wahl = document.getElementById("systemwahl");
+  while (wahl.firstChild) wahl.removeChild(wahl.firstChild);
+  [{id: "", name: "alle"}].concat(modell.systeme).forEach(function (sys) {
+    var option = document.createElement("option");
+    option.value = sys.id;
+    option.textContent = sys.name +
+      (sys.status && sys.status !== "aktiv" ? " · " + sys.status : "");
+    wahl.appendChild(option);
   });
-  if (zustand.system) {
-    var treffer = document.createElement("span");
-    treffer.className = "lbl treffer";
-    treffer.textContent = systemZusammenfassung();
-    systemleiste.appendChild(treffer);
-  }
+  wahl.value = zustand.system || "";
+  wahl.className = "chip" + (zustand.system ? " on" : "");
+  wahl.onchange = function () { zustand.system = wahl.value || null; zeichne(); };
+
+  var weg = document.getElementById("systemweg");
+  weg.hidden = !zustand.system;
+  weg.onclick = function () { zustand.system = null; zeichne(); };
+
+  var treffer = document.getElementById("systemtreffer");
+  treffer.hidden = !zustand.system;
+  treffer.textContent = zustand.system ? systemZusammenfassung() : "";
 
   zeichneWarnungen(modell.warnungen || []);
 }
