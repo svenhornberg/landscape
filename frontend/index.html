@@ -18,14 +18,17 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
    der Inhalt im Kasten, damit ein breiter Bildschirm bei vielen Abteilungen
    trotzdem alles zeigt. */
 .seite{width:fit-content;min-width:min(100%,960px);max-width:100%}
-.top{display:flex;align-items:baseline;gap:24px;padding:20px 28px 0;flex-wrap:wrap}
+/* Kopf und Leiste zaehlen nicht mit, wenn die Seite ihre Breite sucht; sie
+   nehmen die Breite des Kastens und brechen darin um. */
+.top{display:flex;align-items:baseline;gap:24px;padding:20px 28px 0;flex-wrap:wrap;width:0;min-width:100%}
 .top h1{font-size:22px}.top .sub{color:var(--ink-2)}.top .right{margin-left:auto;color:var(--ink-2)}
-.bar{display:flex;align-items:center;gap:32px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bar{display:flex;align-items:center;gap:12px 32px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap;width:0;min-width:100%}
+.bar .treffer{color:var(--ink);font-weight:500}
 .group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.group .lbl{color:var(--ink-2);margin-right:4px}
 .chip{padding:5px 11px;border:1px solid var(--line-2);border-radius:999px;background:var(--panel)}
 .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .warnknopf{margin-left:auto;padding:5px 11px;border:1px solid var(--h2);border-radius:999px;background:var(--h2);color:var(--h2-ink)}
-.warnliste{margin:16px 28px 0;padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.warnliste{margin:16px 28px 0;width:0;min-width:calc(100% - 56px);padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
 .warnliste ul{margin:0;padding-left:18px}.warnliste li{color:var(--ink-2);margin:2px 0}
 .warnliste .q{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--ink-3)}
 .stage{padding:16px 28px 40px}
@@ -41,9 +44,18 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .sys.auslaufend{border-style:dashed;color:var(--ink-2)}
 .sys.geplant{border-style:dotted;background:transparent;color:var(--ink-3)}
 .sys .st{font-size:11px;opacity:.85}
-.legend{display:flex;gap:18px;align-items:center;color:var(--ink-2);padding:10px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.legend{display:flex;gap:8px 18px;align-items:center;color:var(--ink-2);padding:10px 16px;border-top:1px solid var(--line);flex-wrap:wrap;width:0;min-width:100%}
 .legend .sw{display:inline-block;width:14px;height:14px;border:1px solid var(--line-2);vertical-align:-2px;margin-right:6px}
 .legend .sw.n0{background-image:repeating-linear-gradient(135deg,transparent 0 3px,#c9d2d8 3px 4px)}
+
+/* Ausgewaehltes System: Treffer umrandet, der Rest tritt zurueck */
+.mark{box-shadow:inset 0 0 0 3px var(--ink)}
+.dim{opacity:.35}
+.sys.mark{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink);font-weight:600;opacity:1}
+.sys.dim{opacity:.4}
+.way.mark{box-shadow:none;border-left:3px solid var(--ink);padding-left:8px}
+.dbox.dim{opacity:.4}
+.legend .sw.mark{background:var(--panel)}
 
 /* Ebene 1 und 2: Tabellen */
 table.lvl{border-collapse:separate;border-spacing:0;width:auto}
@@ -101,7 +113,7 @@ table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justif
 <body>
 <div class="seite">
 <div class="top"><h1>Bebauungsplan</h1><span class="sub" id="stand"></span><span class="right" id="zahlen"></span></div>
-<div class="bar"><div class="group" id="gfleiste"><span class="lbl">Geschäftsfeld</span></div><button class="warnknopf" id="warnknopf" hidden></button></div>
+<div class="bar"><div class="group" id="gfleiste"><span class="lbl">Geschäftsfeld</span></div><div class="group" id="systemleiste"><span class="lbl">System</span></div><button class="warnknopf" id="warnknopf" hidden></button></div>
 <div class="warnliste" id="warnliste" hidden></div>
 <div class="stage"><div class="card" id="haupt"></div></div>
 </div>
@@ -119,7 +131,7 @@ table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justif
 // damit die Logik an genau einer Stelle liegt. Definitionen siehe SPEC.md.
 
 var modell = null;
-var zustand = {gf: "alle", objekt: null, aufgabe: null, offen: {}, warnungen: false};
+var zustand = {gf: "alle", system: null, objekt: null, aufgabe: null, offen: {}, warnungen: false};
 
 // Nachschlagewerke, je geladenem Modell einmal gebaut
 var nachSystem = {}, nachObjekt = {}, nachGf = {};
@@ -203,6 +215,8 @@ function liesAdresse() {
   var teile = new URLSearchParams(location.hash.replace(/^#/, ""));
   var gf = teile.get("gf");
   zustand.gf = gf && nachGf[gf] ? gf : "alle";
+  var system = teile.get("system");
+  zustand.system = system && nachSystem[system] ? system : null;
   var objekt = teile.get("objekt");
   zustand.objekt = objekt && nachObjekt[objekt] ? objekt : null;
   var aufgabe = teile.get("aufgabe");
@@ -216,6 +230,7 @@ function liesAdresse() {
 function schreibeAdresse() {
   var teile = [];
   if (zustand.gf !== "alle") teile.push("gf=" + encodeURIComponent(zustand.gf));
+  if (zustand.system) teile.push("system=" + encodeURIComponent(zustand.system));
   if (zustand.objekt) teile.push("objekt=" + encodeURIComponent(zustand.objekt));
   if (zustand.aufgabe) teile.push("aufgabe=" + encodeURIComponent(zustand.aufgabe));
   var neu = teile.length ? "#" + teile.join("&") : "";
@@ -261,6 +276,53 @@ function systeme(abteilung, objekt, aufgabe) {
     }
   });
   return ergebnis;
+}
+
+/// Nutzt die Zelle das ausgewaehlte System? Nur mit gewaehltem System sinnvoll.
+function nutztSystem(abteilung, objekt, aufgabe) {
+  return wege(abteilung, objekt, aufgabe).some(function (z) {
+    return z.system === zustand.system;
+  });
+}
+
+function aufgabeNutzt(objektId, aufgabeId) {
+  return (zustaendigFuer[objektId] || []).some(function (abt) {
+    return nutztSystem(abt.id, objektId, aufgabeId);
+  });
+}
+
+function objektNutzt(objekt) {
+  return objekt.aufgaben.some(function (a) { return aufgabeNutzt(objekt.id, a.id); });
+}
+
+function systemName() {
+  var s = nachSystem[zustand.system];
+  return s ? s.name : zustand.system;
+}
+
+/// "CRM: 5 Zuordnungen · 4 Aufgaben · 2 Abteilungen", im aktuellen Filter und
+/// nur dort, wo die Abteilung auch zustaendig ist, wie die Zellen.
+function systemZusammenfassung() {
+  var wege = 0, aufgaben = {}, abteilungen = {};
+  modell.zuordnungen.forEach(function (z) {
+    if (z.system !== zustand.system || gfFilter[z.gf] !== true) return;
+    var zustaendig = (zustaendigFuer[z.objekt] || []).some(function (a) {
+      return a.id === z.abteilung;
+    });
+    if (!zustaendig) return;
+    wege++;
+    aufgaben[z.objekt + "." + z.aufgabe] = true;
+    abteilungen[z.abteilung] = true;
+  });
+  return systemName() + ": " + wege + (wege === 1 ? " Zuordnung" : " Zuordnungen") +
+    " · " + Object.keys(aufgaben).length + " Aufgaben · " +
+    Object.keys(abteilungen).length + " Abteilungen";
+}
+
+/// "mark" fuer Treffer, "dim" fuer den Rest, nichts ohne gewaehltes System.
+function hervor(trifft) {
+  if (!zustand.system) return "";
+  return trifft ? " mark" : " dim";
 }
 
 function hitze(anzahl) {
@@ -331,7 +393,8 @@ function chip(systemId) {
     (s.seit ? " seit " + s.seit : "") + (s.ende ? ", Ende " + s.ende : "")];
   if (s.verantwortlich) titel.push("verantwortlich: " + s.verantwortlich);
   if (s.notiz) titel.push(s.notiz);
-  return '<span class="sys ' + esc(status) + '" title="' + esc(titel.join(" · ")) + '">' +
+  return '<span class="sys ' + esc(status) + hervor(systemId === zustand.system) +
+    '" title="' + esc(titel.join(" · ")) + '">' +
     esc(s.name) +
     (status === "aktiv" ? "" : '<span class="st"> · ' + esc(status) + "</span>") +
     "</span>";
@@ -354,8 +417,8 @@ function wortWege(anzahl) {
   return anzahl === 0 ? "White Spot" : anzahl === 1 ? "1 Weg" : anzahl + " Wege · redundant";
 }
 
-var legende =
-  '<div class="legend">' +
+function legende() {
+  return '<div class="legend">' +
   '<span><span class="sw n1"></span>1 System</span>' +
   '<span><span class="sw n2"></span>2 Systeme, redundant</span>' +
   '<span><span class="sw n3"></span>3 und mehr, redundant</span>' +
@@ -363,7 +426,11 @@ var legende =
   '<span><span class="sw" style="background:var(--bg)"></span>nicht zuständig</span>' +
   '<span><span class="sys aktiv">aktiv</span> <span class="sys auslaufend">auslaufend</span> ' +
   '<span class="sys geplant">geplant</span></span>' +
+  (zustand.system
+    ? '<span><span class="sw mark"></span>' + esc(systemName()) + " im Einsatz, Rest zurückgenommen</span>"
+    : "") +
   "</div>";
+}
 
 // ---------------------------------------------------------------------------
 // Die drei Ebenen
@@ -378,11 +445,16 @@ function ebeneObjekte() {
   if (!sichtbareAbteilungen.length) {
     return '<div class="hinweis">Keine Abteilung arbeitet in diesem Geschäftsfeld.</div>';
   }
+  var objekte = zustand.system ? modell.objekte.filter(objektNutzt) : modell.objekte;
+  if (!objekte.length) {
+    return '<div class="hinweis">' + esc(systemName()) +
+      " ist im aktuellen Filter nirgends im Einsatz.</div>";
+  }
   var html = '<table class="lvl"><thead><tr><th>Objekt</th>';
   sichtbareAbteilungen.forEach(function (a) { html += "<th>" + esc(a.name) + "</th>"; });
   html += "</tr></thead><tbody>";
 
-  modell.objekte.forEach(function (o) {
+  objekte.forEach(function (o) {
     var befunde = befundeObjekt(o);
     html += '<tr><th class="row"><button data-objekt="' + esc(o.id) + '">' + esc(o.name) +
       '<span class="n">' + o.aufgaben.length +
@@ -392,7 +464,7 @@ function ebeneObjekte() {
       '</span><span class="go">›</span></button></th>';
     sichtbareAbteilungen.forEach(function (a) {
       if (a.bearbeitet.indexOf(o.id) < 0) {
-        html += '<td class="c na" title="' +
+        html += '<td class="c na' + hervor(false) + '" title="' +
           esc(a.name + " ist für " + o.name + " nicht zuständig") + '"></td>';
         return;
       }
@@ -405,8 +477,17 @@ function ebeneObjekte() {
           (zelle.max === 1 ? " System" : " Systeme") + " je Aufgabe") +
         (zelle.max >= 2 ? " (redundant)" : "") + ", " + zelle.luecken + " von " +
         o.aufgaben.length + " Aufgaben offen";
-      html += '<td class="c click ' + hitze(zelle.max) + '" data-objekt="' + esc(o.id) +
-        '" title="' + esc(titel) + '">' +
+      var treffer = 0;
+      if (zustand.system) {
+        treffer = o.aufgaben.filter(function (auf) {
+          return nutztSystem(a.id, o.id, auf.id);
+        }).length;
+        titel += "; " + systemName() + (treffer
+          ? " in " + treffer + " von " + o.aufgaben.length + " Aufgaben"
+          : " nicht im Einsatz");
+      }
+      html += '<td class="c click ' + hitze(zelle.max) + hervor(treffer > 0) +
+        '" data-objekt="' + esc(o.id) + '" title="' + esc(titel) + '">' +
         '<span class="cnt">' + (zelle.max || "–") + "</span>" +
         (hinweise.length ? '<span class="sub">' + hinweise.join(" · ") + "</span>" : "") +
         "</td>";
@@ -426,11 +507,18 @@ function ebeneObjekt(objekt) {
   if (!objekt.aufgaben.length) {
     return '<div class="hinweis">' + esc(objekt.name) + " hat noch keine Aufgaben.</div>";
   }
+  var aufgaben = zustand.system
+    ? objekt.aufgaben.filter(function (a) { return aufgabeNutzt(objekt.id, a.id); })
+    : objekt.aufgaben;
+  if (!aufgaben.length) {
+    return '<div class="hinweis">' + esc(systemName()) + " kommt bei " +
+      esc(objekt.name) + " nicht vor.</div>";
+  }
   var html = '<table class="lvl"><thead><tr><th>Aufgabe</th>';
   abteilungen.forEach(function (a) { html += "<th>" + esc(a.name) + "</th>"; });
   html += "</tr></thead><tbody>";
 
-  objekt.aufgaben.forEach(function (auf) {
+  aufgaben.forEach(function (auf) {
     var befunde = befundeAufgabe(objekt.id, auf.id);
     html += '<tr><th class="row"><button data-objekt="' + esc(objekt.id) +
       '" data-aufgabe="' + esc(auf.id) + '">' + esc(auf.name) + '<span class="n">' +
@@ -444,6 +532,7 @@ function ebeneObjekt(objekt) {
         (liste.length === 0 ? "White Spot, zuständig, aber kein Weg"
           : liste.length === 1 ? "1 System" : liste.length + " Systeme, redundant");
       html += '<td class="c click ' + hitze(liste.length) +
+        hervor(liste.indexOf(zustand.system) >= 0) +
         '" data-objekt="' + esc(objekt.id) + '" data-aufgabe="' + esc(auf.id) +
         '" title="' + esc(titel) + '">' +
         (liste.length
@@ -468,14 +557,18 @@ function ebeneAufgabe(objekt, aufgabe) {
   abteilungen.forEach(function (a) {
     var liste = wege(a.id, objekt.id, aufgabe.id);
     var anzahl = systeme(a.id, objekt.id, aufgabe.id).length;
-    html += '<div class="dbox ' + hitze(anzahl) + '"><h3><span class="n">' + esc(a.name) +
+    var kastenTrifft = !zustand.system || nutztSystem(a.id, objekt.id, aufgabe.id);
+    html += '<div class="dbox ' + hitze(anzahl) + hervor(kastenTrifft) +
+      '"><h3><span class="n">' + esc(a.name) +
       '</span><span class="v">' + wortWege(anzahl) + "</span></h3>";
     if (!liste.length) {
       html += '<div class="empty">Keine Zuordnung erfasst, obwohl zuständig.</div>';
     }
     liste.forEach(function (z) {
       var gf = nachGf[z.gf];
-      html += '<div class="way">' + chip(z.system) +
+      // Im zurueckgenommenen Kasten nicht noch einmal zuruecknehmen.
+      var zeileHervor = kastenTrifft ? hervor(z.system === zustand.system) : "";
+      html += '<div class="way' + zeileHervor + '">' + chip(z.system) +
         '<span class="bem">' + esc(z.anmerkung) + "</span>" +
         '<span class="wo"><span class="gf">' + esc(gf ? gf.name : z.gf) + "</span>" +
         '<span class="quelle">' + esc(z.quelle) + "</span></span></div>";
@@ -493,6 +586,8 @@ function baum() {
   var html = '<div class="tree"><button class="node d0' + (zustand.objekt ? "" : " sel") +
     '" data-ziel="wurzel"><span class="tri"></span>Alle Objekte</button>';
   modell.objekte.forEach(function (o) {
+    // Mit gewaehltem System zeigt der Baum nur, was damit gemacht wird.
+    if (zustand.system && !objektNutzt(o)) return;
     var aufgeklappt = zustand.offen[o.id] === true;
     html += '<button class="node d1' +
       (zustand.objekt === o.id && !zustand.aufgabe ? " sel" : "") +
@@ -501,6 +596,7 @@ function baum() {
       badge(befundeObjekt(o)) + "</button>";
     if (!aufgeklappt) return;
     o.aufgaben.forEach(function (a) {
+      if (zustand.system && !aufgabeNutzt(o.id, a.id)) return;
       html += '<button class="node d2' +
         (zustand.objekt === o.id && zustand.aufgabe === a.id ? " sel" : "") +
         '" data-objekt="' + esc(o.id) + '" data-aufgabe="' + esc(a.id) +
@@ -561,6 +657,25 @@ function zeichneKopf() {
     leiste.appendChild(knopf);
   });
 
+  var systemleiste = document.getElementById("systemleiste");
+  Array.prototype.forEach.call(
+    systemleiste.querySelectorAll(".chip, .treffer"),
+    function (c) { c.remove(); },
+  );
+  [{id: null, name: "Alle"}].concat(modell.systeme).forEach(function (sys) {
+    var knopf = document.createElement("button");
+    knopf.className = "chip" + (zustand.system === sys.id ? " on" : "");
+    knopf.textContent = sys.name;
+    knopf.onclick = function () { zustand.system = sys.id; zeichne(); };
+    systemleiste.appendChild(knopf);
+  });
+  if (zustand.system) {
+    var treffer = document.createElement("span");
+    treffer.className = "lbl treffer";
+    treffer.textContent = systemZusammenfassung();
+    systemleiste.appendChild(treffer);
+  }
+
   zeichneWarnungen(modell.warnungen || []);
 }
 
@@ -589,7 +704,7 @@ function zeichne() {
   filterVorbereiten();
   zeichneKopf();
   document.getElementById("haupt").innerHTML =
-    '<div class="explorer">' + baum() + inhalt() + "</div>" + legende;
+    '<div class="explorer">' + baum() + inhalt() + "</div>" + legende();
   schreibeAdresse();
 }
 

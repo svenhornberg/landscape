@@ -482,3 +482,108 @@ Deno.test(
     });
   },
 );
+
+// ---------------------------------------------------------------------------
+// Ein ausgewaehltes System: links nur noch, was damit gemacht wird; in den
+// Zellen bleibt die Struktur, Treffer sind umrandet, der Rest tritt zurueck
+// ---------------------------------------------------------------------------
+
+Deno.test(
+  "Ein ausgewaehltes System filtert Baum und Zeilen und markiert Zellen",
+  OHNE_SANITIZER,
+  async () => {
+    await mitSeite(DEMO, async (seite) => {
+      await seite.locator("#systemleiste .chip", { hasText: "CRM" }).click();
+      assertEquals(await seite.evaluate("location.hash"), "#system=crm");
+      assertStringIncludes(
+        (await seite.textContent("#systemleiste")) ?? "",
+        "CRM: 5 Zuordnungen · 4 Aufgaben · 2 Abteilungen",
+      );
+
+      // Baum und Ebene 1: nur Angebot und Kunde, die Spalten bleiben alle
+      assertEquals(
+        await seite.locator(".tree .node.d1").evaluateAll((k) =>
+          k.map((e) => e.dataset.objekt)
+        ),
+        ["angebot", "kunde"],
+      );
+      assertEquals(
+        await seite.locator("tbody th.row button").evaluateAll((k) =>
+          k.map((e) => e.dataset.objekt)
+        ),
+        ["angebot", "kunde"],
+      );
+      assertEquals(await seite.locator("thead th").count(), 6);
+
+      // In den Zeilen: genau die drei Zellen mit CRM sind markiert
+      assertEquals(await seite.locator("td.c.mark").count(), 3);
+      assert(
+        await zelle(seite, "angebot", 0).evaluate((e) => e.classList.contains("mark")),
+      );
+      assert(
+        await zelle(seite, "kunde", 0).evaluate((e) => e.classList.contains("mark")),
+      );
+      assert(
+        await zelle(seite, "kunde", 1).evaluate((e) => e.classList.contains("mark")),
+      );
+      assert(await zelle(seite, "kunde", 2).evaluate((e) => e.classList.contains("dim")));
+      assertStringIncludes(
+        (await zelle(seite, "angebot", 0).getAttribute("title")) ?? "",
+        "CRM in 3 von 3 Aufgaben",
+      );
+
+      // Ebene 2 fuer Kunde: nur "anlegen" laeuft ueber CRM, "Bonitaet pruefen" fehlt
+      await seite.locator('.tree .node[data-objekt="kunde"]').click();
+      assertEquals(await seite.locator("tbody tr").count(), 1);
+      assertEquals(
+        await seite.locator(".tree .node.d2").evaluateAll((k) =>
+          k.map((e) => e.dataset.aufgabe)
+        ),
+        ["anlegen"],
+      );
+
+      // Ebene 2 fuer Angebot: alle drei Aufgaben, CRM-Chips markiert, Excel zurueck
+      await seite.locator('.tree .node[data-objekt="angebot"]').click();
+      assertEquals(await seite.locator("tbody tr").count(), 3);
+      assertEquals(await seite.locator("table .sys.mark").allTextContents(), [
+        "CRM",
+        "CRM",
+        "CRM",
+      ]);
+      assertEquals(await seite.locator("table .sys.dim").allTextContents(), ["Excel"]);
+
+      // Ebene 3: eine Zeile markiert, eine zurueckgenommen
+      await seite.locator('.tree .node.d2[data-aufgabe="erstellen"]').click();
+      assertEquals(await seite.locator(".way.mark").count(), 1);
+      assertEquals(await seite.locator(".way.dim").count(), 1);
+      assertStringIncludes((await seite.textContent(".legend")) ?? "", "CRM im Einsatz");
+
+      // Abwahl: alles wieder da, der Rest der Adresse bleibt
+      await seite.locator("#systemleiste .chip", { hasText: "Alle" }).click();
+      assertEquals(await seite.locator(".mark, .dim").count(), 0);
+      assertEquals(await seite.locator(".tree .node.d1").count(), 5);
+      assertEquals(
+        await seite.evaluate("location.hash"),
+        "#objekt=angebot&aufgabe=erstellen",
+      );
+    });
+
+    // ueber den Permalink; ein System, das nur eine Abteilung nutzt
+    await mitSeite(DEMO + "#system=oms", async (seite) => {
+      assertEquals(
+        await seite.locator("#systemleiste .chip.on").textContent(),
+        "Order-Management",
+      );
+      assertEquals(await seite.locator("tbody tr").count(), 1);
+      assertEquals(await seite.locator("td.c.mark").count(), 1);
+    });
+
+    // ein Objekt, das das System nicht nutzt, bleibt anwaehlbar und sagt es
+    await mitSeite(DEMO + "#system=crm&objekt=rechnung", async (seite) => {
+      assertStringIncludes(
+        (await seite.textContent("#haupt .hinweis")) ?? "",
+        "CRM kommt bei Rechnung nicht vor",
+      );
+    });
+  },
+);
