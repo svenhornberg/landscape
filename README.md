@@ -140,8 +140,10 @@ data/
 ```
 
 `bplan validate PFAD` prüft das Verzeichnis `PFAD`, ohne Angabe das aktuelle.
-Das Datenformat ist in [SPEC.md](SPEC.md) beschrieben, ein vollständiges
-Beispiel liegt unter [`examples/demo/data/`](examples/demo/data).
+Die Syntax der Dateien erklärt [SYNTAX.md](SYNTAX.md), geschrieben für
+Menschen und für Assistenten wie Copilot, die Daten anlegen; den Hintergrund
+liefert [SPEC.md](SPEC.md). Ein vollständiges Beispiel liegt unter
+[`examples/demo/data/`](examples/demo/data).
 
 ### Bei null anfangen
 
@@ -195,5 +197,6 @@ examples/
   tippfehler/      kleiner Datensatz mit absichtlichen Fehlern
 mockups/
   bebauungsplan-mockup-3.html
-SPEC.md
+SPEC.md            Spezifikation, Grundlage jeder Änderung
+SYNTAX.md          das Datenformat, für Menschen und Assistenten
 ```

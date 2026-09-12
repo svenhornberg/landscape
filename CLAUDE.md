@@ -11,6 +11,10 @@ System) und zeigt Redundanzen und White Spots. Die Spezifikation steht in
 Beispieldaten. Echte Daten leben in einem eigenen, privaten Repo, das nur
 ein `data/`-Verzeichnis hat.
 
+`SYNTAX.md` erklärt das Datenformat für Menschen und Assistenten wie
+Copilot, die Datendateien anlegen. Wer Parser, Regeln oder Felder ändert,
+zieht `SYNTAX.md` im selben Commit nach; sie muss dem Code entsprechen.
+
 ## Harte Regel: keine realen Bezüge
 
 In diesem Repo darf nichts stehen, was auf ein reales Unternehmen
