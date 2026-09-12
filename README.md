@@ -23,7 +23,7 @@ Es gibt nichts zu installieren und nichts zu bauen. Gebraucht wird
 ```bash
 cd mein-datenrepo
 
-BPLAN=https://raw.githubusercontent.com/svenhornberg/landscape/b615b409e2087cf6cadd3c93a24d0be0eb8a6769/cli.ts
+BPLAN=https://raw.githubusercontent.com/svenhornberg/landscape/dd054c809450e97ce2736f9494ea294ffd847d76/cli.ts
 deno run --allow-read --allow-write "$BPLAN" validate .
 ```
 
