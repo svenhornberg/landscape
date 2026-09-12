@@ -86,6 +86,41 @@ Es gibt keinen Build-Schritt und keine Binaries, weder lokal noch in der
 CI. Dieses Repo hat gar keine CI; das Datenrepo baut bei jedem Push über
 Cloudflare Workers Builds mit der Werkzeug-URL aus seiner `package.json`.
 
+## Umgebung in Claude Code im Web
+
+- Deno fehlt im frischen Container. Installieren mit
+  `curl -fsSL https://deno.land/install.sh | sh`, danach
+  `export PATH=$HOME/.deno/bin:$PATH`. Das Datenrepo pinnt 2.9.6.
+- Chromium für die Browsertests ist vorinstalliert
+  (`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`), kein `playwright install`.
+- Ad-hoc-Skripte mit `npm:playwright` außerhalb des Repos laufen mit
+  `deno run -A --node-modules-dir=none`, sonst sucht Deno ein
+  `node_modules`.
+- Sichtkontrolle: Seite mit `make` bauen, mit Playwright unter
+  `file://…#objekt=…` öffnen, Viewport 1300×900, Screenshot an Sven
+  schicken. Sven hat keinen lokalen Klon und sieht nur das Deployte.
+- `git -C <pfad>` und absolute Pfade verwenden; das Arbeitsverzeichnis
+  springt zwischen den beiden Klonen.
+
+## Stand der Oberfläche und nächste Schritte
+
+Zuletzt gebaut: Ebene 3 als Tabelle Abteilung × Geschäftsfeld mit
+Fundstelle im Chip-Tooltip; Knopf in der Wurzelzeile, der alle Objekte
+auf- oder zuklappt; Zentralfunktion (`zentral: true`, gilt in jedem Filter
+mit, eigener Chip und eigene Spalte); technische Capabilities
+(`art: technisch`, Regel F14, Gruppe am Ende mit Zahnrad); der Baum klebt
+beim Rollen und nutzt die ganze Fensterhöhe.
+
+Offen laut SPEC: `bplan serve` (Schritt 3, derselbe Handler könnte den
+Worker ersetzen); Suchfeld und Schalter „nur Auffälligkeiten" (Schritt 4,
+teils durch den Systemfilter abgedeckt). Ideen, nicht beauftragt:
+Kostenstelle je Zelle in Ebene 3, Ebene 3 transponiert (Geschäftsfeld als
+Zeile), Berichtswesen als Objektvorlage.
+
+Nach jeder Änderung am Werkzeug: Beispiel-URL in `README.md`, `CLAUDE.md`
+und `SYNTAX.md` auf den neuen Commit setzen (eigener Doku-Commit) und den
+Pin im Datenrepo bewusst nachziehen; dort steht der Ablauf in `CLAUDE.md`.
+
 ## Branches
 
 Es wird ausschliesslich auf `main` gearbeitet. Keine Feature-Branches,
