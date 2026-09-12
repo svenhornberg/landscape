@@ -22,12 +22,11 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
    nehmen die Breite des Kastens und brechen darin um. */
 .top{display:flex;align-items:baseline;gap:24px;padding:20px 28px 0;flex-wrap:wrap;width:0;min-width:100%}
 .top h1{font-size:22px}.top .sub{color:var(--ink-2)}.top .right{margin-left:auto;color:var(--ink-2)}
-/* Die Systemwahl steht immer an derselben Stelle rechts neben den
-   Geschaeftsfeldern: die Leiste bricht nicht zwischen den Gruppen um, nur die
-   Chips innerhalb einer Gruppe. Nichts in der Leiste aendert seine Breite mit
-   der Auswahl. */
-.bar{display:flex;align-items:flex-start;gap:12px 32px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:nowrap;width:0;min-width:100%}
-#gfleiste{flex:0 1 auto;min-width:0}
+/* Nichts in der Leiste aendert seine Breite mit der Auswahl, deshalb haengt
+   der Umbruch nur vom Fenster ab: bei wenig Platz wandert die Systemgruppe als
+   Ganzes in die zweite Zeile, ein einzelner Chip bricht nie allein um. */
+.bar{display:flex;align-items:flex-start;gap:12px 32px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap;width:0;min-width:100%}
+#gfleiste{flex:0 0 auto}
 #systemleiste{flex:none;flex-wrap:nowrap}
 .bar .treffer{color:var(--ink);font-weight:500}
 .group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.group .lbl{color:var(--ink-2);margin-right:4px}
@@ -115,10 +114,12 @@ table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justif
 .node.d0{padding-left:8px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px}
 .node.d1{padding-left:24px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px}
 .node.d2{padding-left:44px;color:var(--ink-2)}.node.d2.sel{color:#fff}
+.node.leer{color:var(--ink-3);font-weight:400;font-family:inherit;font-size:13px;cursor:default}
+.hinweis .wege{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .pane{overflow:auto;min-width:0}
 .pane .ph{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
 .pane .ph h2{font-size:16px}.pane .ph .meta{color:var(--ink-2)}
-@media (max-width:720px){.explorer{grid-template-columns:1fr}.tree{border-right:0;border-bottom:1px solid var(--line);max-height:30vh}.bar{flex-wrap:wrap}}
+@media (max-width:720px){.explorer{grid-template-columns:1fr}.tree{border-right:0;border-bottom:1px solid var(--line);max-height:30vh}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -331,6 +332,22 @@ function systemZusammenfassung() {
     Object.keys(abteilungen).length + " Abteilungen";
 }
 
+/// Wenn das gewaehlte System im aktuellen Filter nirgends vorkommt: sagen, wo
+/// gesucht wurde, und einen Ausweg anbieten, statt drei leere Flaechen.
+function systemOhneTreffer() {
+  return zustand.system !== null && !modell.objekte.some(objektNutzt);
+}
+
+function leereSystemansicht() {
+  var gf = nachGf[zustand.gf];
+  var wo = gf ? "im Geschäftsfeld " + esc(gf.name) : "im aktuellen Stand";
+  return '<div class="hinweis"><p>' + esc(systemName()) + " kommt " + wo + " nicht vor.</p>" +
+    '<p class="wege">' +
+    (gf ? '<button class="chip" data-aktion="alle-gf">Alle Geschäftsfelder</button>' : "") +
+    '<button class="chip" data-aktion="system-weg">Systemfilter aufheben</button>' +
+    "</p></div>";
+}
+
 /// "mark" fuer Treffer, "dim" fuer den Rest, nichts ohne gewaehltes System.
 function hervor(trifft) {
   if (!zustand.system) return "";
@@ -439,8 +456,10 @@ function legende() {
   '<span><span class="sys aktiv">aktiv</span> <span class="sys auslaufend">auslaufend</span> ' +
   '<span class="sys geplant">geplant</span></span>' +
   (zustand.system
-    ? '<span><span class="sw mark"></span>' + esc(systemName()) + " im Einsatz: " +
-      systemZusammenfassung() + "; Rest zurückgenommen</span>"
+    ? '<span><span class="sw mark"></span>' + esc(systemName()) +
+      (systemOhneTreffer()
+        ? ": im aktuellen Filter nirgends im Einsatz"
+        : " im Einsatz: " + systemZusammenfassung() + "; Rest zurückgenommen") + "</span>"
     : "") +
   "</div>";
 }
@@ -452,6 +471,7 @@ function legende() {
 /// Ebene 1: Objekt x Abteilung. Zelle zeigt den hoechsten Redundanzwert der
 /// Aufgaben darunter und "N offen" fuer White Spots.
 function ebeneObjekte() {
+  if (systemOhneTreffer()) return leereSystemansicht();
   if (!modell.objekte.length) {
     return '<div class="hinweis">Noch keine Objekte in <code>aufgaben.yaml</code>.</div>';
   }
@@ -459,10 +479,6 @@ function ebeneObjekte() {
     return '<div class="hinweis">Keine Abteilung arbeitet in diesem Geschäftsfeld.</div>';
   }
   var objekte = zustand.system ? modell.objekte.filter(objektNutzt) : modell.objekte;
-  if (!objekte.length) {
-    return '<div class="hinweis">' + esc(systemName()) +
-      " ist im aktuellen Filter nirgends im Einsatz.</div>";
-  }
   var html = '<table class="lvl"><thead><tr><th>Objekt</th>';
   sichtbareAbteilungen.forEach(function (a) { html += "<th>" + esc(a.name) + "</th>"; });
   html += "</tr></thead><tbody>";
@@ -512,6 +528,7 @@ function ebeneObjekte() {
 
 /// Ebene 2: Aufgabe x zustaendige Abteilungen, Zelle zeigt die System-Chips.
 function ebeneObjekt(objekt) {
+  if (systemOhneTreffer()) return leereSystemansicht();
   var abteilungen = zustaendigFuer[objekt.id] || [];
   if (!abteilungen.length) {
     return '<div class="hinweis">Im aktuellen Filter ist keine Abteilung für ' +
@@ -524,8 +541,9 @@ function ebeneObjekt(objekt) {
     ? objekt.aufgaben.filter(function (a) { return aufgabeNutzt(objekt.id, a.id); })
     : objekt.aufgaben;
   if (!aufgaben.length) {
+    if (systemOhneTreffer()) return leereSystemansicht();
     return '<div class="hinweis">' + esc(systemName()) + " kommt bei " +
-      esc(objekt.name) + " nicht vor.</div>";
+      esc(objekt.name) + " nicht vor. Links stehen die Objekte, bei denen es vorkommt.</div>";
   }
   var html = '<table class="lvl"><thead><tr><th>Aufgabe</th>';
   abteilungen.forEach(function (a) { html += "<th>" + esc(a.name) + "</th>"; });
@@ -561,6 +579,7 @@ function ebeneObjekt(objekt) {
 /// Ebene 3: je zustaendiger Abteilung ein Kasten mit allen Wegen. Leerer
 /// Kasten = White Spot.
 function ebeneAufgabe(objekt, aufgabe) {
+  if (systemOhneTreffer()) return leereSystemansicht();
   var abteilungen = zustaendigFuer[objekt.id] || [];
   if (!abteilungen.length) {
     return '<div class="hinweis">Im aktuellen Filter ist keine Abteilung für ' +
@@ -599,6 +618,10 @@ function ebeneAufgabe(objekt, aufgabe) {
 function baum() {
   var html = '<div class="tree"><button class="node d0' + (zustand.objekt ? "" : " sel") +
     '" data-ziel="wurzel"><span class="tri"></span>Alle Objekte</button>';
+  if (systemOhneTreffer()) {
+    html += '<span class="node d1 leer"><span class="tri"></span>nichts mit ' +
+      esc(systemName()) + "</span>";
+  }
   modell.objekte.forEach(function (o) {
     // Mit gewaehltem System zeigt der Baum nur, was damit gemacht wird.
     if (zustand.system && !objektNutzt(o)) return;
@@ -724,6 +747,13 @@ function zeichne() {
 }
 
 document.getElementById("haupt").addEventListener("click", function (ereignis) {
+  var aktion = ereignis.target.closest("[data-aktion]");
+  if (aktion) {
+    if (aktion.dataset.aktion === "alle-gf") zustand.gf = "alle";
+    if (aktion.dataset.aktion === "system-weg") zustand.system = null;
+    zeichne();
+    return;
+  }
   var knopf = ereignis.target.closest("[data-objekt],[data-ziel]");
   if (!knopf) return;
   if (knopf.dataset.ziel === "wurzel") {

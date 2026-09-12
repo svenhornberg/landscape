@@ -613,15 +613,52 @@ Deno.test("Die Systemwahl springt beim Auswaehlen nicht", OHNE_SANITIZER, async 
         `bei ${breite}px verschoben`,
       );
       assertEquals([chipsNachher.x, chipsNachher.y], [chipsVorher.x, chipsVorher.y]);
-      // die Auswahl steht rechts neben den Geschaeftsfeldern, nicht darunter
-      assert(
-        nachher.x > chipsNachher.x,
-        "Systemwahl steht nicht rechts der Geschaeftsfelder",
-      );
-      assert(
-        Math.abs(nachher.y - chipsNachher.y) < 20,
-        "Systemwahl steht nicht in derselben Zeile",
-      );
+      // mit Platz steht die Auswahl rechts neben den Geschaeftsfeldern; bei wenig
+      // Platz wandert die ganze Gruppe darunter, abhaengig nur vom Fenster
+      if (breite === 1300) {
+        assert(
+          nachher.x > chipsNachher.x,
+          "Systemwahl steht nicht rechts der Geschaeftsfelder",
+        );
+        assert(
+          Math.abs(nachher.y - chipsNachher.y) < 20,
+          "Systemwahl steht nicht in derselben Zeile",
+        );
+      }
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// Leerer Zustand: System im aktuellen Filter nirgends
+// ---------------------------------------------------------------------------
+
+Deno.test(
+  "Kommt das System im Filter nicht vor, gibt es einen Ausweg",
+  OHNE_SANITIZER,
+  async () => {
+    // CRM wird bei Privatkunden nirgends benutzt
+    await mitSeite(DEMO + "#gf=pk&system=crm&objekt=angebot", async (seite) => {
+      const hinweis = (await seite.textContent("#haupt .hinweis")) ?? "";
+      assertStringIncludes(hinweis, "CRM kommt im Geschäftsfeld Privatkunden nicht vor");
+      assertStringIncludes((await seite.textContent(".tree")) ?? "", "nichts mit CRM");
+      assertStringIncludes(
+        (await seite.textContent(".legend")) ?? "",
+        "CRM: im aktuellen Filter nirgends im Einsatz",
+      );
+      assertEquals(await seite.locator(".tree .node.d1:not(.leer)").count(), 0);
+
+      // der Ausweg: alle Geschaeftsfelder, dann ist CRM da
+      await seite.locator('[data-aktion="alle-gf"]').click();
+      assertEquals(await seite.locator("#gfleiste .chip.on").textContent(), "Alle");
+      assertEquals(await seite.locator(".tree .node.d1").count(), 2);
+      assertEquals(await seite.evaluate("location.hash"), "#system=crm&objekt=angebot");
+
+      // der andere Ausweg: Systemfilter weg
+      await seite.locator("#gfleiste .chip", { hasText: "Privatkunden" }).click();
+      await seite.locator('[data-aktion="system-weg"]').click();
+      assertEquals(await seite.inputValue("#systemwahl"), "");
+      assertEquals(await seite.evaluate("location.hash"), "#gf=pk&objekt=angebot");
+    });
+  },
+);
