@@ -47,15 +47,14 @@ Quelltext dieses Repos über seine URL auf und braucht sonst nur sein
 eigenes Datenverzeichnis:
 
 ```bash
-deno run --allow-read --allow-write \
-  https://raw.githubusercontent.com/svenhornberg/landscape/v0.2.0/cli.ts \
-  validate .
+BPLAN=https://raw.githubusercontent.com/svenhornberg/landscape/f7d355ae97e935e517df96e75cb7fd4c6109046a/cli.ts
+deno run --allow-read --allow-write "$BPLAN" validate .
 ```
 
-Die URL zeigt immer auf ein **Tag**, nie auf `main`. Sonst ändert eine
-Änderung am Werkzeug unbemerkt den Deploy fremder Daten. Ein neues Tag
-wird gesetzt, wenn sich das Verhalten ändert, und die URL im Datenrepo
-wird bewusst nachgezogen.
+Die URL zeigt immer auf einen **festen Commit**, nie auf `main`. Sonst
+ändert eine Änderung am Werkzeug unbemerkt den Deploy fremder Daten. Wer
+das Verhalten ändert, zieht die URL im Datenrepo bewusst nach; das ist
+der Moment, in dem jemand hinsieht.
 
 ## Prüfen
 

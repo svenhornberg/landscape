@@ -23,20 +23,19 @@ Es gibt nichts zu installieren und nichts zu bauen. Gebraucht wird
 ```bash
 cd mein-datenrepo
 
-deno run --allow-read --allow-write \
-  https://raw.githubusercontent.com/svenhornberg/landscape/v0.2.0/cli.ts \
-  validate .
+BPLAN=https://raw.githubusercontent.com/svenhornberg/landscape/f7d355ae97e935e517df96e75cb7fd4c6109046a/cli.ts
+deno run --allow-read --allow-write "$BPLAN" validate .
 ```
 
 Deno lädt den Quelltext beim ersten Aufruf und hat ihn danach im Cache; die
-folgenden Läufe brauchen kein Netz. Die URL zeigt auf ein Tag, damit eine
-Änderung hier nicht unbemerkt das Ergebnis anderswo verschiebt.
+folgenden Läufe brauchen kein Netz. Die URL zeigt auf einen Commit, nicht auf
+`main`. Eine Änderung hier soll nicht unbemerkt verschieben, was anderswo
+herauskommt.
 
 Wer es öfter braucht, legt sich einen Kurzbefehl an:
 
 ```bash
-deno install -g --allow-read --allow-write --name bplan \
-  https://raw.githubusercontent.com/svenhornberg/landscape/v0.2.0/cli.ts
+deno install -g --allow-read --allow-write --name bplan "$BPLAN"
 
 bplan validate
 bplan make -o bebauungsplan.html
