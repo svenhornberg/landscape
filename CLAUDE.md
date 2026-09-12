@@ -65,10 +65,19 @@ deno task tippfehler    # 3 Fehler mit Vorschlägen
 ```
 
 Alle drei müssen vor jedem Commit durchlaufen. `deno task pruefe` fasst
-`deno check`, `deno lint`, `deno fmt --check` und `deno test` zusammen.
+`deno check`, `deno lint`, `deno fmt --check` und `deno test` zusammen:
+`tests/regeln_test.ts` (ein Fall je Regel, über die CLI) und
+`tests/oberflaeche_test.ts` (das gebaute Frontend in Chromium, gegen den
+Demo-Datensatz). Chromium einmalig mit
+`deno run -A npm:playwright@1.56.1 install chromium`.
+
+Wer am Frontend etwas ändert, ergänzt den Browser-Test. Die Zahlen darin
+sind von Hand aus `examples/demo/data/` abgeleitet; ein Test, der das
+Frontend nur abschreibt, prüft nichts.
 
 Es gibt keinen Build-Schritt und keine Binaries, weder lokal noch in der
-CI. Aufgerufen wird immer der Quelltext.
+CI. Dieses Repo hat gar keine CI; das Datenrepo baut bei jedem Push über
+Cloudflare Workers Builds mit der Werkzeug-URL aus seiner `package.json`.
 
 ## Branches
 

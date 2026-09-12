@@ -44,6 +44,20 @@ bplan make -o bebauungsplan.html
 Fertige Binaries gibt es bewusst nicht, weder als Release noch im Repo.
 Ausgeführt wird immer der Quelltext, lokal wie in der CI.
 
+## Zusammenspiel mit einem Datenrepo
+
+Dieses Repo ist das Werkzeug, sonst nichts. Die echten Daten liegen in
+einem eigenen, privaten Repo, das nur `data/` und seinen Deploy enthält.
+Die Abhängigkeit läuft in eine Richtung: das Datenrepo verweist per URL
+auf einen **festen Commit** dieses Repos, dieses Repo kennt das Datenrepo
+nicht. Nichts wird kopiert; Deno lädt `cli.ts`, `src/` und
+`frontend/index.html` beim Aufruf und cacht sie.
+
+Hier gibt es keine CI. Das Tor ist `deno task pruefe` vor jedem Commit. Das
+Datenrepo baut bei jedem Push über Cloudflare Workers Builds mit genau der
+Werkzeug-URL, die in seiner `package.json` steht; eine Änderung hier kommt
+dort erst an, wenn jemand die URL bewusst umsetzt.
+
 ## Am Repo arbeiten
 
 ```bash
@@ -53,6 +67,18 @@ cd landscape
 deno task demo          # läuft sauber durch
 deno task tippfehler    # meldet Tippfehler mit Zeile und Vorschlag
 deno task pruefe        # check, lint, fmt und alle Tests
+```
+
+`deno task pruefe` fährt 60 Tests: `tests/regeln_test.ts` ruft die CLI für
+jede Validierungsregel auf, `tests/oberflaeche_test.ts` öffnet das
+gebaute Frontend in Chromium und prüft gegen den Demo-Datensatz, dass
+Baum, Badges, alle drei Ebenen, der Filter, White Spots, Chips,
+Warnungen und die Maskierung von Anmerkungen stimmen, und dass das
+Frontend ohne eingebettetes Modell `api/model` holt und bei HTTP 422
+die Fehlerliste zeigt. Dafür muss Chromium einmalig da sein:
+
+```bash
+deno run -A npm:playwright@1.56.1 install chromium
 ```
 
 So sieht die Ausgabe bei Tippfehlern aus:
@@ -144,7 +170,8 @@ verglichen wird sowohl mit der ID als auch mit dem Anzeigenamen, damit
 
 Die vollständige Liste steht als Regelnummern im Kopf von
 [`src/validate.ts`](src/validate.ts); jede Regel hat einen Testfall in
-[`tests/regeln_test.ts`](tests/regeln_test.ts).
+[`tests/regeln_test.ts`](tests/regeln_test.ts), das Frontend seine in
+[`tests/oberflaeche_test.ts`](tests/oberflaeche_test.ts).
 
 ## Aufbau
 
@@ -161,7 +188,8 @@ src/
 frontend/
   index.html       das komplette Frontend, Vanilla JS, ohne Build-Schritt
 tests/
-  regeln_test.ts   ein Testfall je Regel
+  regeln_test.ts        ein Testfall je Regel, ueber die CLI
+  oberflaeche_test.ts   das Frontend in Chromium, gegen den Demo-Datensatz
 examples/
   demo/            vollständiger Beispieldatensatz (fiktiver Versandhandel)
   tippfehler/      kleiner Datensatz mit absichtlichen Fehlern
