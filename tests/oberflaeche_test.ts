@@ -112,9 +112,9 @@ Deno.test(
     await mitSeite(DEMO, async (seite) => {
       await seite.locator('.tree .node[data-objekt="angebot"]').click();
       assertEquals(await seite.textContent(".pane .ph h2"), "Angebot");
-      assertEquals(
-        await seite.textContent(".pane .ph .meta"),
-        "Aufgaben × zuständige Abteilungen",
+      assertStringIncludes(
+        (await seite.textContent(".pane .ph .meta")) ?? "",
+        "die Systeme, mit denen die Abteilung diese Aufgabe erledigt",
       );
 
       // Nur Vertrieb ist zustaendig, drei Aufgaben, Baum aufgeklappt
@@ -157,12 +157,23 @@ Deno.test("Lebenszyklus der Systeme sitzt auf den Chips", OHNE_SANITIZER, async 
     // Marktplatz-Team erfasst Bestellungen auch im geplanten Order-Management
     const geplant = seite.locator("table .sys.geplant");
     assertEquals(await geplant.count(), 1);
-    assertEquals(await geplant.textContent(), "Order-Management");
+    assertStringIncludes(
+      (await geplant.textContent()) ?? "",
+      "Order-Management · geplant",
+    );
 
     await seite.locator('.tree .node[data-objekt="rechnung"]').click();
     const auslaufend = seite.locator("table .sys.auslaufend");
     assertEquals(await auslaufend.count(), 1);
-    assertEquals(await auslaufend.textContent(), "Mahnlauf-Tool");
+    assertStringIncludes(
+      (await auslaufend.textContent()) ?? "",
+      "Mahnlauf-Tool · auslaufend",
+    );
+    // alles aus systeme.yaml haengt als Tooltip am Chip
+    assertEquals(
+      await auslaufend.getAttribute("title"),
+      "Mahnlauf-Tool · auslaufend seit 2014, Ende 2027 · verantwortlich: Buchhaltung",
+    );
   });
 });
 
@@ -345,5 +356,129 @@ Deno.test(
     } finally {
       await server.stop();
     }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Layout: die Seite waechst mit den Daten, nicht mit dem Bildschirm
+// ---------------------------------------------------------------------------
+
+Deno.test(
+  "Die Seite waechst mit den Daten, nicht mit dem Bildschirm",
+  OHNE_SANITIZER,
+  async () => {
+    await mitSeite(DEMO, async (seite) => {
+      // breit: fuenf Abteilungen brauchen keine 2000 Pixel
+      await seite.setViewportSize({ width: 2000, height: 900 });
+      const karte = await seite.locator(".card").boundingBox();
+      assert(karte !== null);
+      assert(
+        karte.width >= 960 && karte.width <= 1500,
+        `Karte ist ${karte.width}px breit, erwartet zwischen 960 und 1500`,
+      );
+      const tabelle = await seite.locator("table.lvl").boundingBox();
+      const pane = await seite.locator(".pane").boundingBox();
+      assert(tabelle !== null && pane !== null);
+      assert(tabelle.width <= pane.width + 1, "Tabelle ragt aus dem Kasten");
+
+      // Kopf, Filterleiste und Kasten enden auf derselben Kante
+      const zahlen = await seite.locator("#zahlen").boundingBox();
+      assert(zahlen !== null);
+      assert(
+        Math.abs(zahlen.x + zahlen.width - (karte.x + karte.width)) <= 1,
+        "Kopfzeile und Kasten sind unterschiedlich breit",
+      );
+
+      // schmal: nie breiter als das Fenster, gerollt wird im Kasten
+      await seite.setViewportSize({ width: 700, height: 900 });
+      const rolltNicht = await seite.evaluate(
+        "document.documentElement.scrollWidth <= document.documentElement.clientWidth",
+      );
+      assert(rolltNicht, "die Seite rollt horizontal");
+    });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Die Bedeutung aus der Legende steht an den Elementen selbst
+// ---------------------------------------------------------------------------
+
+Deno.test(
+  "Redundanz und White Spots sind an den Zellen beschriftet",
+  OHNE_SANITIZER,
+  async () => {
+    await mitSeite(DEMO, async (seite) => {
+      // Ebene 1: Wort in der Zelle, Details im Tooltip, auch fuer "nicht zustaendig"
+      const rot = zelle(seite, "bestellung", 1);
+      assertEquals(await rot.locator(".sub").textContent(), "redundant · 1 offen");
+      assertStringIncludes(
+        (await rot.getAttribute("title")) ?? "",
+        "Bestellung × Kundenservice: höchstens 3 Systeme je Aufgabe (redundant), 1 von 3 Aufgaben offen",
+      );
+      const na = seite.locator('tr:has(button[data-objekt="angebot"]) td.na').first();
+      assertEquals(
+        await na.getAttribute("title"),
+        "Kundenservice ist für Angebot nicht zuständig",
+      );
+      assertStringIncludes(
+        (await seite.locator('.tree .node[data-objekt="bestellung"] .badge').getAttribute(
+          "title",
+        )) ?? "",
+        "3 × redundant",
+      );
+
+      // Ebene 2: ein White Spot heisst "offen" und sagt im Tooltip, warum
+      await seite.locator("#gfleiste .chip", { hasText: "Privatkunden" }).click();
+      await seite.locator('.tree .node[data-objekt="kunde"]').click();
+      const offen = seite.locator('tr:has(button[data-aufgabe="bonitaet"]) td.n0');
+      assertEquals(await offen.count(), 2);
+      assertEquals(await offen.first().locator(".sub").textContent(), "offen");
+      assertStringIncludes(
+        (await offen.first().getAttribute("title")) ?? "",
+        "White Spot, zuständig, aber kein Weg",
+      );
+
+      // Ebene 3: der Kasten sagt "redundant" dazu, jede Zeile hat Geschaeftsfeld und Fundstelle
+      await seite.locator("#gfleiste .chip", { hasText: "Alle" }).click();
+      await seite.locator('.tree .node[data-objekt="angebot"]').click();
+      await seite.locator('.tree .node.d2[data-aufgabe="erstellen"]').click();
+      assertEquals(await seite.textContent(".dbox h3 .v"), "2 Wege · redundant");
+      assertEquals(await seite.locator(".way .wo .gf").count(), 2);
+      assertEquals(await seite.locator(".way .wo .quelle").count(), 2);
+    });
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Permalink: die Ansicht steht in der Adresse
+// ---------------------------------------------------------------------------
+
+Deno.test(
+  "Die Adresse traegt die Ansicht und stellt sie wieder her",
+  OHNE_SANITIZER,
+  async () => {
+    await mitSeite(DEMO + "#gf=pk&objekt=kunde&aufgabe=bonitaet", async (seite) => {
+      assertEquals(await seite.textContent(".pane .ph h2"), "Kunde Bonität prüfen");
+      assertEquals(
+        await seite.locator("#gfleiste .chip.on").textContent(),
+        "Privatkunden",
+      );
+      assertEquals(await seite.locator(".dbox.n0").count(), 2);
+      assertEquals(await seite.locator(".tree .node.d2.sel").count(), 1);
+
+      // Klicks schreiben die Adresse fort, ohne die Seite neu zu laden
+      await seite.locator('.tree .node[data-ziel="wurzel"]').click();
+      assertEquals(await seite.evaluate("location.hash"), "#gf=pk");
+      await seite.locator("#gfleiste .chip", { hasText: "Alle" }).click();
+      assertEquals(await seite.evaluate("location.hash"), "");
+      await seite.locator('.tree .node[data-objekt="angebot"]').click();
+      assertEquals(await seite.evaluate("location.hash"), "#objekt=angebot");
+    });
+
+    // Unbekanntes in der Adresse wird ignoriert statt die Seite zu brechen
+    await mitSeite(DEMO + "#gf=gibtsnicht&objekt=auchnicht", async (seite) => {
+      assertEquals(await seite.textContent(".pane .ph h2"), "Alle Objekte");
+      assertEquals(await seite.locator("#gfleiste .chip.on").textContent(), "Alle");
+    });
   },
 );

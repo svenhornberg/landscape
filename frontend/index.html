@@ -13,6 +13,11 @@ h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-se
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
 button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+/* Die Seite waechst mit den Daten, nicht mit dem Bildschirm: so breit wie der
+   Inhalt, mindestens 960px, hoechstens der Bildschirm. Darueber hinaus rollt
+   der Inhalt im Kasten, damit ein breiter Bildschirm bei vielen Abteilungen
+   trotzdem alles zeigt. */
+.seite{width:fit-content;min-width:min(100%,960px);max-width:100%}
 .top{display:flex;align-items:baseline;gap:24px;padding:20px 28px 0;flex-wrap:wrap}
 .top h1{font-size:22px}.top .sub{color:var(--ink-2)}.top .right{margin-left:auto;color:var(--ink-2)}
 .bar{display:flex;align-items:center;gap:32px;padding:14px 28px;border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -35,12 +40,13 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:
 .sys{display:inline-block;padding:2px 7px;border-radius:4px;font-size:12px;background:rgba(255,255,255,.7);border:1px solid rgba(28,38,46,.25);white-space:nowrap}
 .sys.auslaufend{border-style:dashed;color:var(--ink-2)}
 .sys.geplant{border-style:dotted;background:transparent;color:var(--ink-3)}
+.sys .st{font-size:11px;opacity:.85}
 .legend{display:flex;gap:18px;align-items:center;color:var(--ink-2);padding:10px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
 .legend .sw{display:inline-block;width:14px;height:14px;border:1px solid var(--line-2);vertical-align:-2px;margin-right:6px}
 .legend .sw.n0{background-image:repeating-linear-gradient(135deg,transparent 0 3px,#c9d2d8 3px 4px)}
 
 /* Ebene 1 und 2: Tabellen */
-table.lvl{border-collapse:separate;border-spacing:0;width:100%}
+table.lvl{border-collapse:separate;border-spacing:0;width:auto}
 table.lvl th,table.lvl td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:0;vertical-align:middle}
 table.lvl thead th{padding:8px 10px;text-align:left;font-weight:500;color:var(--ink-2);border-bottom:2px solid var(--ink);white-space:nowrap;background:var(--panel);position:sticky;top:0}
 table.lvl th.row{text-align:left;min-width:240px;background:var(--panel)}
@@ -48,29 +54,32 @@ table.lvl th.row button{width:100%;padding:10px 12px;display:flex;align-items:ba
 table.lvl th.row button:hover{background:var(--bg)}
 table.lvl th.row .n{color:var(--ink-3);font-weight:400;font-size:12px;font-family:"IBM Plex Sans",system-ui,sans-serif}
 table.lvl th.row .go{margin-left:auto;color:var(--ink-3);font-weight:400}
-table.lvl td.c{min-width:100px;height:44px;text-align:center}
+table.lvl td.c{min-width:110px;height:44px;text-align:center}
 table.lvl td.c .cnt{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-size:17px;font-weight:600}
 .n1 .cnt{color:var(--h1-ink)}.n2 .cnt{color:var(--h2-ink)}.n3 .cnt{color:var(--h3-ink)}
 .n0 .cnt{color:var(--ink-3);font-size:13px;font-weight:400}
 table.lvl td.c .sub{font-size:11px;color:var(--ink-2);display:block;margin-top:-2px}
 table.lvl td.na{background:var(--bg)}
 table.lvl td.c.click{cursor:pointer}table.lvl td.c.click:hover{box-shadow:inset 0 0 0 2px var(--ink)}
-table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justify-content:center}
+table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justify-content:center;max-width:240px}
 
 /* Ebene 3: je zustaendiger Abteilung ein Kasten mit allen Wegen */
-.l3{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:16px}
-.dbox{border:1px solid var(--line-2);border-radius:6px;padding:10px 12px}
+.l3{display:flex;flex-wrap:wrap;gap:12px;padding:16px}
+.dbox{flex:0 0 320px;max-width:100%;border:1px solid var(--line-2);border-radius:6px;padding:10px 12px}
 .dbox h3{font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.dbox h3 .v{font-size:13px;font-weight:500}
+.dbox h3 .n{flex:1;min-width:0}
+.dbox h3 .v{font-size:13px;font-weight:500;white-space:nowrap;flex:none}
 .dbox.n1 h3 .v{color:var(--h1-ink)}.dbox.n2 h3 .v{color:var(--h2-ink)}.dbox.n3 h3 .v{color:var(--h3-ink)}
 .dbox.n0 h3 .v{color:var(--ink-3);font-weight:400}
-.dbox .way{padding:6px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:auto 1fr auto;gap:2px 8px;align-items:baseline}
-.dbox .way .gf{color:var(--ink-3);font-size:12px;white-space:nowrap}
-.dbox .way .quelle{grid-column:1/-1;color:var(--ink-3);font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.dbox .way{padding:7px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:3px 8px;align-items:baseline}
+.dbox .way .bem{min-width:0}
+.dbox .way .wo{grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+.dbox .way .gf{white-space:nowrap}
+.dbox .way .quelle{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}
 .dbox .empty{color:var(--ink-3);padding:8px 0}
 
 /* Variante B: Explorer, Baum links, Inhalt rechts */
-.explorer{display:grid;grid-template-columns:280px 1fr;min-height:60vh}
+.explorer{display:grid;grid-template-columns:280px 1fr;min-height:360px}
 .tree{border-right:1px solid var(--line);padding:8px 0;overflow:auto;max-height:75vh}
 .node{display:flex;align-items:center;gap:6px;width:100%;padding:5px 10px 5px 0;white-space:nowrap}
 .node:hover{background:var(--bg)}.node.sel{background:var(--ink);color:#fff}
@@ -82,7 +91,7 @@ table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justif
 .node.d0{padding-left:8px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px}
 .node.d1{padding-left:24px;font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;font-weight:600;font-size:15px}
 .node.d2{padding-left:44px;color:var(--ink-2)}.node.d2.sel{color:#fff}
-.pane{overflow:auto}
+.pane{overflow:auto;min-width:0}
 .pane .ph{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
 .pane .ph h2{font-size:16px}.pane .ph .meta{color:var(--ink-2)}
 @media (max-width:720px){.explorer{grid-template-columns:1fr}.tree{border-right:0;border-bottom:1px solid var(--line);max-height:30vh}}
@@ -90,10 +99,12 @@ table.lvl td.c .chips{display:flex;flex-wrap:wrap;gap:3px;padding:5px 6px;justif
 </style>
 </head>
 <body>
+<div class="seite">
 <div class="top"><h1>Bebauungsplan</h1><span class="sub" id="stand"></span><span class="right" id="zahlen"></span></div>
 <div class="bar"><div class="group" id="gfleiste"><span class="lbl">Geschäftsfeld</span></div><button class="warnknopf" id="warnknopf" hidden></button></div>
 <div class="warnliste" id="warnliste" hidden></div>
 <div class="stage"><div class="card" id="haupt"></div></div>
+</div>
 
 <!-- `bplan make` ersetzt den Platzhalter durch das Modell. Bleibt er stehen,
      weil `bplan serve` das Frontend unveraendert ausliefert, holt das Skript
@@ -177,12 +188,47 @@ function uebernimm(daten) {
     var k = schluessel(z.abteilung, z.objekt, z.aufgabe);
     (wegeIndex[k] || (wegeIndex[k] = [])).push(z);
   });
-  if (zustand.objekt && !nachObjekt[zustand.objekt]) {
-    zustand.objekt = null;
-    zustand.aufgabe = null;
-  }
+  liesAdresse();
   zeichne();
 }
+
+// ---------------------------------------------------------------------------
+// Permalink: die Ansicht steht im Hash der Adresse, z. B.
+// #gf=pk&objekt=kunde&aufgabe=bonitaet. So laesst sich eine Stelle im Plan
+// verschicken, auch als Datei. Fehlt etwas, gilt die Vorgabe; Unbekanntes
+// wird ignoriert.
+// ---------------------------------------------------------------------------
+
+function liesAdresse() {
+  var teile = new URLSearchParams(location.hash.replace(/^#/, ""));
+  var gf = teile.get("gf");
+  zustand.gf = gf && nachGf[gf] ? gf : "alle";
+  var objekt = teile.get("objekt");
+  zustand.objekt = objekt && nachObjekt[objekt] ? objekt : null;
+  var aufgabe = teile.get("aufgabe");
+  zustand.aufgabe = zustand.objekt && aufgabe &&
+      nachObjekt[zustand.objekt].aufgaben.some(function (a) { return a.id === aufgabe; })
+    ? aufgabe
+    : null;
+  if (zustand.objekt) zustand.offen[zustand.objekt] = true;
+}
+
+function schreibeAdresse() {
+  var teile = [];
+  if (zustand.gf !== "alle") teile.push("gf=" + encodeURIComponent(zustand.gf));
+  if (zustand.objekt) teile.push("objekt=" + encodeURIComponent(zustand.objekt));
+  if (zustand.aufgabe) teile.push("aufgabe=" + encodeURIComponent(zustand.aufgabe));
+  var neu = teile.length ? "#" + teile.join("&") : "";
+  if (neu === location.hash) return;
+  // replaceState statt location.hash: kein Sprung, kein Verlaufseintrag je Klick.
+  history.replaceState(null, "", neu || location.href.split("#")[0]);
+}
+
+addEventListener("hashchange", function () {
+  if (!modell) return;
+  liesAdresse();
+  zeichne();
+});
 
 function melde(html) {
   document.getElementById("haupt").innerHTML = '<div class="hinweis">' + html + "</div>";
@@ -279,28 +325,41 @@ function filterVorbereiten() {
 
 /// System-Chip: aktiv voll, auslaufend gestrichelt, geplant gepunktet.
 function chip(systemId) {
-  var s = nachSystem[systemId];
-  return '<span class="sys ' + esc(s && s.status ? s.status : "aktiv") + '">' +
-    esc(s ? s.name : systemId) + "</span>";
+  var s = nachSystem[systemId] || {name: systemId, status: "aktiv"};
+  var status = s.status || "aktiv";
+  var titel = [s.name, status +
+    (s.seit ? " seit " + s.seit : "") + (s.ende ? ", Ende " + s.ende : "")];
+  if (s.verantwortlich) titel.push("verantwortlich: " + s.verantwortlich);
+  if (s.notiz) titel.push(s.notiz);
+  return '<span class="sys ' + esc(status) + '" title="' + esc(titel.join(" · ")) + '">' +
+    esc(s.name) +
+    (status === "aktiv" ? "" : '<span class="st"> · ' + esc(status) + "</span>") +
+    "</span>";
 }
 
 /// Badge je Baumknoten: Redundanzen rot, sonst White Spots grau, sonst nichts.
 function badge(befunde) {
-  if (befunde.redundant) return '<span class="badge">' + befunde.redundant + "</span>";
-  if (befunde.luecken) return '<span class="badge w">' + befunde.luecken + "</span>";
+  if (befunde.redundant) {
+    return '<span class="badge" title="' + befunde.redundant +
+      ' × redundant: mehrere Systeme für dieselbe Aufgabe">' + befunde.redundant + "</span>";
+  }
+  if (befunde.luecken) {
+    return '<span class="badge w" title="' + befunde.luecken +
+      ' × offen: zuständig, aber kein Weg (White Spot)">' + befunde.luecken + "</span>";
+  }
   return "";
 }
 
 function wortWege(anzahl) {
-  return anzahl === 0 ? "White Spot" : anzahl === 1 ? "1 Weg" : anzahl + " Wege";
+  return anzahl === 0 ? "White Spot" : anzahl === 1 ? "1 Weg" : anzahl + " Wege · redundant";
 }
 
 var legende =
   '<div class="legend">' +
   '<span><span class="sw n1"></span>1 System</span>' +
-  '<span><span class="sw n2"></span>2</span>' +
-  '<span><span class="sw n3"></span>3+</span>' +
-  '<span><span class="sw n0"></span>White Spot</span>' +
+  '<span><span class="sw n2"></span>2 Systeme, redundant</span>' +
+  '<span><span class="sw n3"></span>3 und mehr, redundant</span>' +
+  '<span><span class="sw n0"></span>White Spot: zuständig, aber kein Weg (offen)</span>' +
   '<span><span class="sw" style="background:var(--bg)"></span>nicht zuständig</span>' +
   '<span><span class="sys aktiv">aktiv</span> <span class="sys auslaufend">auslaufend</span> ' +
   '<span class="sys geplant">geplant</span></span>' +
@@ -333,13 +392,23 @@ function ebeneObjekte() {
       '</span><span class="go">›</span></button></th>';
     sichtbareAbteilungen.forEach(function (a) {
       if (a.bearbeitet.indexOf(o.id) < 0) {
-        html += '<td class="c na"></td>';
+        html += '<td class="c na" title="' +
+          esc(a.name + " ist für " + o.name + " nicht zuständig") + '"></td>';
         return;
       }
       var zelle = objektZelle(o, a.id);
-      html += '<td class="c click ' + hitze(zelle.max) + '" data-objekt="' + esc(o.id) + '">' +
+      var hinweise = [];
+      if (zelle.max >= 2) hinweise.push("redundant");
+      if (zelle.luecken) hinweise.push(zelle.luecken + " offen");
+      var titel = o.name + " × " + a.name + ": " +
+        (zelle.max === 0 ? "kein Weg" : "höchstens " + zelle.max +
+          (zelle.max === 1 ? " System" : " Systeme") + " je Aufgabe") +
+        (zelle.max >= 2 ? " (redundant)" : "") + ", " + zelle.luecken + " von " +
+        o.aufgaben.length + " Aufgaben offen";
+      html += '<td class="c click ' + hitze(zelle.max) + '" data-objekt="' + esc(o.id) +
+        '" title="' + esc(titel) + '">' +
         '<span class="cnt">' + (zelle.max || "–") + "</span>" +
-        (zelle.luecken ? '<span class="sub">' + zelle.luecken + " offen</span>" : "") +
+        (hinweise.length ? '<span class="sub">' + hinweise.join(" · ") + "</span>" : "") +
         "</td>";
     });
     html += "</tr>";
@@ -371,11 +440,15 @@ function ebeneObjekt(objekt) {
       '</span><span class="go">›</span></button></th>';
     abteilungen.forEach(function (a) {
       var liste = systeme(a.id, objekt.id, auf.id);
+      var titel = auf.name + " · " + a.name + ": " +
+        (liste.length === 0 ? "White Spot, zuständig, aber kein Weg"
+          : liste.length === 1 ? "1 System" : liste.length + " Systeme, redundant");
       html += '<td class="c click ' + hitze(liste.length) +
-        '" data-objekt="' + esc(objekt.id) + '" data-aufgabe="' + esc(auf.id) + '">' +
+        '" data-objekt="' + esc(objekt.id) + '" data-aufgabe="' + esc(auf.id) +
+        '" title="' + esc(titel) + '">' +
         (liste.length
           ? '<div class="chips">' + liste.map(chip).join("") + "</div>"
-          : '<span class="cnt">–</span>') +
+          : '<span class="cnt">–</span><span class="sub">offen</span>') +
         "</td>";
     });
     html += "</tr>";
@@ -395,17 +468,17 @@ function ebeneAufgabe(objekt, aufgabe) {
   abteilungen.forEach(function (a) {
     var liste = wege(a.id, objekt.id, aufgabe.id);
     var anzahl = systeme(a.id, objekt.id, aufgabe.id).length;
-    html += '<div class="dbox ' + hitze(anzahl) + '"><h3>' + esc(a.name) +
-      '<span class="v">' + wortWege(anzahl) + "</span></h3>";
+    html += '<div class="dbox ' + hitze(anzahl) + '"><h3><span class="n">' + esc(a.name) +
+      '</span><span class="v">' + wortWege(anzahl) + "</span></h3>";
     if (!liste.length) {
       html += '<div class="empty">Keine Zuordnung erfasst, obwohl zuständig.</div>';
     }
     liste.forEach(function (z) {
       var gf = nachGf[z.gf];
       html += '<div class="way">' + chip(z.system) +
-        "<span>" + esc(z.anmerkung) + "</span>" +
-        '<span class="gf">' + esc(gf ? gf.name : z.gf) + "</span>" +
-        '<span class="quelle">' + esc(z.quelle) + "</span></div>";
+        '<span class="bem">' + esc(z.anmerkung) + "</span>" +
+        '<span class="wo"><span class="gf">' + esc(gf ? gf.name : z.gf) + "</span>" +
+        '<span class="quelle">' + esc(z.quelle) + "</span></span></div>";
     });
     html += "</div>";
   });
@@ -447,9 +520,9 @@ function inhalt() {
     })[0] || null;
   }
   var titel = objekt ? (aufgabe ? objekt.name + " " + aufgabe.name : objekt.name) : "Alle Objekte";
-  var meta = aufgabe ? "je Abteilung alle Wege im Detail"
-    : objekt ? "Aufgaben × zuständige Abteilungen"
-      : "Objekte × Abteilungen, schlechteste Aufgabe je Zelle";
+  var meta = aufgabe ? "je zuständiger Abteilung alle Wege, mit Anmerkung, Geschäftsfeld und Fundstelle"
+    : objekt ? "je Zelle die Systeme, mit denen die Abteilung diese Aufgabe erledigt"
+      : "je Zelle die Aufgabe mit den meisten Systemen; ab 2 redundant, offen = zuständig ohne Weg";
   var koerper = aufgabe ? ebeneAufgabe(objekt, aufgabe)
     : objekt ? ebeneObjekt(objekt)
       : ebeneObjekte();
@@ -517,6 +590,7 @@ function zeichne() {
   zeichneKopf();
   document.getElementById("haupt").innerHTML =
     '<div class="explorer">' + baum() + inhalt() + "</div>" + legende;
+  schreibeAdresse();
 }
 
 document.getElementById("haupt").addEventListener("click", function (ereignis) {
